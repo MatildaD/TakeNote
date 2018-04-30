@@ -1,8 +1,9 @@
 package components;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class SceneNote {
+public class SceneNote implements Serializable{
 
     private String note;
     private String startTime;
@@ -76,15 +77,15 @@ public class SceneNote {
      *  ------------------------------------------------------------------*/
 
     public void addTag(Tag tag) {
-        tagList.add(tag);
+        this.tagList.add(tag);
     }
 
     public void removeTag(Tag tag) {
-        tagList.remove(tag);
+        this.tagList.remove(tag);
     }
 
     public void clearTags() {
-        tagList.clear();
+        this.tagList.clear();
     }
 
 
