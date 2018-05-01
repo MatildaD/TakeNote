@@ -22,10 +22,10 @@ public class Episode implements Serializable{
      * 	Constructor
      *  ------------------------------------------------------------------*/
 
-    public Episode(String episodeName, List<SubtitleBit> subtitles, List<SceneNote> notes, Season season) {
+    public Episode(String episodeName, Season season) {
         this.episodeName = episodeName;
-        this.subtitles = subtitles;
-        this.notes = notes;
+        this.subtitles = new ArrayList<>();
+        this.notes = new ArrayList<>();
         this.season = season;
 
     }
