@@ -78,4 +78,11 @@ public class SubtitleBit implements Serializable {
     public void setNumber(int number) {
         this.number = number;
     }
+
+
+    @Override
+    public String toString() {
+        return lineOne + "<br>" + lineTwo + "<br>" + lineThree;
+
+    }
 }

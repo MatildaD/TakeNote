@@ -2,6 +2,7 @@ package components;
 
 import javafx.scene.Scene;
 
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.Serializable;
@@ -14,6 +15,8 @@ public class Episode implements Serializable{
     private List<SubtitleBit> subtitles;
     private List<SceneNote> notes;
     private Season season;
+    private Point subtitleScrollPos;
+    private Point sceneNoteScrollPos;
 
 
 
@@ -27,6 +30,8 @@ public class Episode implements Serializable{
         this.subtitles = new ArrayList<>();
         this.notes = new ArrayList<>();
         this.season = season;
+        this.subtitleScrollPos = new Point(0, 0);
+        this.sceneNoteScrollPos = new Point(0, 0);
 
     }
 
@@ -34,7 +39,7 @@ public class Episode implements Serializable{
      * 	Getters
      *  ------------------------------------------------------------------*/
 
-    public String getTitleName() {
+    public String getName() {
         return episodeName;
     }
 
@@ -50,6 +55,13 @@ public class Episode implements Serializable{
         return season;
     }
 
+    public Point getSubtitleScrollPos() {
+        return subtitleScrollPos;
+    }
+
+    public Point getSceneNoteScrollPos() {
+        return sceneNoteScrollPos;
+    }
 
     /* -------------------------------------------------------------------
      * 	Setters
@@ -72,21 +84,28 @@ public class Episode implements Serializable{
         this.season = season;
     }
 
+    public void setSubtitleScrollPos(Point subtitleScrollPos) {
+        this.subtitleScrollPos = subtitleScrollPos;
+    }
+
+    public void setSceneNoteScrollPos(Point sceneNoteScrollPos) {
+        this.sceneNoteScrollPos = sceneNoteScrollPos;
+    }
 
     /* -------------------------------------------------------------------
      * 	Manipulate notes
      *  ------------------------------------------------------------------*/
 
     public void addNote(SceneNote note) {
-        this.notes.add(note);
+        notes.add(note);
     }
 
     public void removeNode(SceneNote note) {
-        this.notes.remove(note);
+        notes.remove(note);
     }
 
     public void clearNotes() {
-        this.notes.clear();
+        notes.clear();
     }
 
     /* -------------------------------------------------------------------
@@ -94,7 +113,7 @@ public class Episode implements Serializable{
      *  ------------------------------------------------------------------*/
 
     private void addSubtitleBit(SubtitleBit sub) {
-        this.subtitles.add(sub);
+        subtitles.add(sub);
     }
 
 
@@ -117,7 +136,7 @@ public class Episode implements Serializable{
      * of Strings.
      * (Demonstrates Java FileReader, BufferedReader, and Java5.)
      */
-    private void importSubtitles(String filename)
+    public void importSubtitles(String filename)
     {
         try
         {
@@ -134,9 +153,17 @@ public class Episode implements Serializable{
                     String lineOne = reader.readLine();
                     String lineTwo = reader.readLine();
                     String lineThree = "";
-                    if (lineTwo.equals("")) {
+                    if (!lineTwo.equals("")) {
                         lineThree = reader.readLine();
                     }
+
+                    System.out.println("LineOne= " + lineOne + "\n"
+                            + "LineTwo= " + lineTwo + "\n"
+                            + "LineThree= " + lineThree + "\n"
+                            + "StartTime= " + startTime + "\n"
+                            + "EndTime= " + endTime + "\n"
+                            + "Number= " + number + "\n"
+                    );
 
                     SubtitleBit sub = new SubtitleBit(startTime, endTime, lineOne, lineTwo, lineThree, number);
                     addSubtitleBit(sub);
@@ -156,4 +183,12 @@ public class Episode implements Serializable{
 
 
 
+    /* -------------------------------------------------------------------
+     * 	toString
+     *  ------------------------------------------------------------------*/
+
+    @Override
+    public String toString() {
+        return episodeName;
+    }
 }
