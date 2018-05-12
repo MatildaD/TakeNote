@@ -1,5 +1,6 @@
 package components;
 
+import java.awt.*;
 import java.io.Serializable;
 
 public class SubtitleBit implements Serializable {
@@ -10,6 +11,7 @@ public class SubtitleBit implements Serializable {
     private String startTime;
     private String endTime;
     private int number;
+    private Point scrollPos;
 
     /* -------------------------------------------------------------------
      * 	Constructor
@@ -22,6 +24,7 @@ public class SubtitleBit implements Serializable {
         this.startTime = startTime;
         this.endTime = endTime;
         this.number = number;
+        this.scrollPos = new Point(0, 0);
     }
 
     /* -------------------------------------------------------------------
@@ -49,6 +52,10 @@ public class SubtitleBit implements Serializable {
 
     public int getNumber() {
         return number;
+    }
+
+    public Point getScrollPos() {
+        return scrollPos;
     }
 
     /* -------------------------------------------------------------------
@@ -79,6 +86,9 @@ public class SubtitleBit implements Serializable {
         this.number = number;
     }
 
+    public void setScrollPos(Point scrollPos) {
+        this.scrollPos = scrollPos;
+    }
 
     @Override
     public String toString() {

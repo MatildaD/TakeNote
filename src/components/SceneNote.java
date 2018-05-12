@@ -1,6 +1,7 @@
 package components;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class SceneNote implements Serializable{
@@ -16,12 +17,22 @@ public class SceneNote implements Serializable{
      * 	Constructor
      *  ------------------------------------------------------------------*/
 
-    public SceneNote(String note, String startTime, String endTime, List<Tag> tagList, SubtitleBit sub) {
+    public SceneNote(String note, SubtitleBit sub) {
         this.note = note;
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.tagList = tagList;
+        this.startTime = sub.getStartTime();
+        this.endTime = sub.getEndTime();
+        this.tagList = new ArrayList<>();
         this.sub = sub;
+
+    }
+
+    public SceneNote(String note) {
+        this.note = note;
+        this.startTime = "00:00:00";
+        this.endTime = "00:00:00";
+        this.tagList = new ArrayList<>();
+        this.sub = null;
+
     }
 
     /* -------------------------------------------------------------------
@@ -77,12 +88,14 @@ public class SceneNote implements Serializable{
      *  ------------------------------------------------------------------*/
 
     public void addTag(Tag tag) {
-        this.tagList.add(tag);
+        tagList.add(tag);
     }
 
     public void removeTag(Tag tag) {
-        this.tagList.remove(tag);
+        tagList.remove(tag);
     }
+
+    public boolean hasTag(Tag tag) { return tagList.contains(tag);}
 
     public void clearTags() {
         this.tagList.clear();

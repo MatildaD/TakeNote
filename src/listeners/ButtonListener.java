@@ -30,8 +30,13 @@ public class ButtonListener implements ActionListener {
             noteFrame.removeEpisode();
         }  else if (e.getSource().equals(noteFrame.getAddSubtitlesButton())) {
             noteFrame.openSubtitles();
+        }  else if (e.getSource().equals(noteFrame.getRemoveSubtitlesButton())) {
+            noteFrame.removeSubtitles();
     }
     }
+
+
+
 
     /**
     public void actionPerformed(ActionEvent e) {

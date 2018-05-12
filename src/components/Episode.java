@@ -17,6 +17,7 @@ public class Episode implements Serializable{
     private Season season;
     private Point subtitleScrollPos;
     private Point sceneNoteScrollPos;
+    private SceneNote activeSceneNote;
 
 
 
@@ -32,6 +33,7 @@ public class Episode implements Serializable{
         this.season = season;
         this.subtitleScrollPos = new Point(0, 0);
         this.sceneNoteScrollPos = new Point(0, 0);
+        this.activeSceneNote = null;
 
     }
 
@@ -63,6 +65,10 @@ public class Episode implements Serializable{
         return sceneNoteScrollPos;
     }
 
+    public SceneNote getActiveSceneNote() {
+        return activeSceneNote;
+    }
+
     /* -------------------------------------------------------------------
      * 	Setters
      *  ------------------------------------------------------------------*/
@@ -92,6 +98,10 @@ public class Episode implements Serializable{
         this.sceneNoteScrollPos = sceneNoteScrollPos;
     }
 
+    public void setActiveSceneNote(SceneNote activeSceneNote) {
+        this.activeSceneNote = activeSceneNote;
+    }
+
     /* -------------------------------------------------------------------
      * 	Manipulate notes
      *  ------------------------------------------------------------------*/
@@ -114,6 +124,10 @@ public class Episode implements Serializable{
 
     private void addSubtitleBit(SubtitleBit sub) {
         subtitles.add(sub);
+    }
+
+    public void clearSubtitles() {
+        subtitles.clear();
     }
 
 
@@ -148,8 +162,8 @@ public class Episode implements Serializable{
                     int number = Integer.parseInt(line);
                     String time = reader.readLine();
                     String[] timeSplit = time.split(" --> ");
-                    String startTime = timeSplit[0];
-                    String endTime = timeSplit[1];
+                    String startTime = timeSplit[0].substring(0,8);
+                    String endTime = timeSplit[1].substring(0,8);
                     String lineOne = reader.readLine();
                     String lineTwo = reader.readLine();
                     String lineThree = "";

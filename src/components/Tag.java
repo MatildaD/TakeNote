@@ -39,6 +39,10 @@ public class Tag implements Serializable {
 
 
 
+    public boolean hasAlias(String name) {
+        return aliases.contains(name);
+
+    }
 
     @Override public String toString() {
         return tag;

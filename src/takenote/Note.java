@@ -1,7 +1,9 @@
 package takenote;
 
 import components.Episode;
+import components.SceneNote;
 import components.Season;
+import components.Tag;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -12,6 +14,7 @@ public class Note implements Serializable{
     private List<Season> seasons;
     private String name;
     private Episode selectedEpisode;
+    private List<Tag> tagList;
 
 
     /* -------------------------------------------------------------------
@@ -22,6 +25,7 @@ public class Note implements Serializable{
         this.name = name;
         this.seasons = new ArrayList<>();
         this.selectedEpisode = null;
+        this.tagList = new ArrayList<>();
     }
 
     /* -------------------------------------------------------------------
@@ -40,6 +44,10 @@ public class Note implements Serializable{
         return selectedEpisode;
     }
 
+    public List<Tag> getTagList() {
+        return tagList;
+    }
+
     /* -------------------------------------------------------------------
      * 	Setters
      *  ------------------------------------------------------------------*/
@@ -54,6 +62,10 @@ public class Note implements Serializable{
 
     public void setSelectedEpisode(Episode selectedEpisode) {
         this.selectedEpisode = selectedEpisode;
+    }
+
+    public void setTagList(List<Tag> tagList) {
+        this.tagList = tagList;
     }
 
     /* -------------------------------------------------------------------
@@ -103,7 +115,51 @@ public class Note implements Serializable{
 
 
 
+    /* -------------------------------------------------------------------
+     * 	Tags
+     *  ------------------------------------------------------------------*/
 
+    public boolean tagExists(Tag tag) {
+        return tagList.contains(tag);
+    }
 
+    public boolean tagExists(String name) {
+        for (Tag t: tagList) {
+            if (t.getTag().equals(name) || t.hasAlias(name)) {
+                return true;
+            }
 
+        }
+
+        return false;
+    }
+
+    public Tag getTag(String name) {
+        for (Tag t: tagList) {
+            if (t.getTag().equals(name) || t.hasAlias(name)) {
+                return t;
+            }
+
+        }
+        return null;
+    }
+
+    public void addTag(Tag tag) {
+        tagList.add(tag);
+    }
+
+    public void removeTag(Tag tag) {
+        if (tagList.contains(tag)) {
+            tagList.remove(tag);
+            for (Season season: seasons) {
+                for (Episode episode: season.getEpisodeList()) {
+                    for (SceneNote s: episode.getNotes()) {
+                        if (s.hasTag(tag)) {
+                            s.removeTag(tag);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
