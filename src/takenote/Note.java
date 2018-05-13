@@ -52,7 +52,7 @@ public class Note implements Serializable{
      * 	Setters
      *  ------------------------------------------------------------------*/
 
-    public void setSeasons(List seasons) {
+    public void setSeasons(List<Season> seasons) {
         this.seasons = seasons;
     }
 
@@ -119,13 +119,9 @@ public class Note implements Serializable{
      * 	Tags
      *  ------------------------------------------------------------------*/
 
-    public boolean tagExists(Tag tag) {
-        return tagList.contains(tag);
-    }
-
     public boolean tagExists(String name) {
         for (Tag t: tagList) {
-            if (t.getTag().equals(name) || t.hasAlias(name)) {
+            if (t.getTag().toLowerCase().equals(name.toLowerCase()) || t.hasAlias(name)) {
                 return true;
             }
 
@@ -136,7 +132,7 @@ public class Note implements Serializable{
 
     public Tag getTag(String name) {
         for (Tag t: tagList) {
-            if (t.getTag().equals(name) || t.hasAlias(name)) {
+            if (t.getTag().toLowerCase().equals(name.toLowerCase()) || t.hasAlias(name)) {
                 return t;
             }
 
@@ -147,6 +143,20 @@ public class Note implements Serializable{
     public void addTag(Tag tag) {
         tagList.add(tag);
     }
+
+
+    public List<String> getAllTagNames() {
+        List<String> allTagNames = new ArrayList<>();
+        for (Tag t: tagList) {
+            allTagNames.add(t.getTag());
+            for (String a: t.getAliases()) {
+                allTagNames.add(a + " (" + t.getTag() + ")");
+            }
+        }
+
+        return allTagNames;
+    }
+
 
     public void removeTag(Tag tag) {
         if (tagList.contains(tag)) {
@@ -161,5 +171,20 @@ public class Note implements Serializable{
                 }
             }
         }
+    }
+
+    public boolean multipleOccurrencesOfTag(Tag tag) {
+        if (tagList.contains(tag)) {
+            for (Season season : seasons) {
+                for (Episode episode : season.getEpisodeList()) {
+                    for (SceneNote s : episode.getNotes()) {
+                        if (s.hasTag(tag)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 }

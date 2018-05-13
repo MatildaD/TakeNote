@@ -171,6 +171,7 @@ public class Episode implements Serializable{
                         lineThree = reader.readLine();
                     }
 
+                    /*
                     System.out.println("LineOne= " + lineOne + "\n"
                             + "LineTwo= " + lineTwo + "\n"
                             + "LineThree= " + lineThree + "\n"
@@ -178,6 +179,7 @@ public class Episode implements Serializable{
                             + "EndTime= " + endTime + "\n"
                             + "Number= " + number + "\n"
                     );
+                    */
 
                     SubtitleBit sub = new SubtitleBit(startTime, endTime, lineOne, lineTwo, lineThree, number);
                     addSubtitleBit(sub);

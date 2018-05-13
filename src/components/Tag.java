@@ -18,6 +18,9 @@ public class Tag implements Serializable {
         this.aliases = new ArrayList<>();
     }
 
+    public void setTag(String tag) {
+        this.tag = tag;
+    }
 
     public String getTag() {
         return tag;
@@ -40,7 +43,13 @@ public class Tag implements Serializable {
 
 
     public boolean hasAlias(String name) {
-        return aliases.contains(name);
+        for (String s: aliases) {
+            if (s.toLowerCase().equals(name.toLowerCase())) {
+                return true;
+            }
+        }
+
+        return false;
 
     }
 
