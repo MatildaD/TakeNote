@@ -1,0 +1,1 @@
+This program makes use of MigLayout v4.0 (Which can be downloaded from http://www.miglayout.com/)
