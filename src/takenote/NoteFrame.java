@@ -88,9 +88,7 @@ public class NoteFrame extends JFrame {
     private JSplitPane subtitleNotesAndSeasons;
     private JSplitPane topAndBottom;
     private JSplitPane tagsAndNotes;
-
-
-
+    
 
     public JPanel getTagsPanel() {
         return tagsPanel;
