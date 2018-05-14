@@ -66,7 +66,7 @@ public class NoteFrame extends JFrame {
     //SceneNotes
     private List<JTextArea> activeNotesList;
     private List<SubtitleBit> activeSubtitleBits;
-    
+
 
 
     NoteFrame(Note note) {
