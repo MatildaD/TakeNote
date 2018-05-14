@@ -66,9 +66,7 @@ public class NoteFrame extends JFrame {
     //SceneNotes
     private List<JTextArea> activeNotesList;
     private List<SubtitleBit> activeSubtitleBits;
-
-
-    final String EPISODE_SPACE = "      ";
+    
 
 
     NoteFrame(Note note) {
