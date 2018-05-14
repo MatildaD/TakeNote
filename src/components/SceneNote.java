@@ -103,4 +103,8 @@ public class SceneNote implements Serializable{
 
 
 
+
+    public void removeSub() {
+        sub = null;
+    }
 }

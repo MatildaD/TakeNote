@@ -2,6 +2,7 @@ package components;
 
 import javafx.scene.Scene;
 
+import javax.swing.*;
 import java.awt.*;
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -110,13 +111,14 @@ public class Episode implements Serializable{
         notes.add(note);
     }
 
-    public void removeNode(SceneNote note) {
+    public void removeNote(SceneNote note) {
         notes.remove(note);
     }
 
     public void clearNotes() {
         notes.clear();
     }
+
 
     /* -------------------------------------------------------------------
      * 	Reading in subtitles
@@ -150,26 +152,27 @@ public class Episode implements Serializable{
      * of Strings.
      * (Demonstrates Java FileReader, BufferedReader, and Java5.)
      */
-    public void importSubtitles(String filename)
-    {
-        try
-        {
-            BufferedReader reader = new BufferedReader(new FileReader(filename));
-            String line;
-            while ((line = reader.readLine()) != null)
-            {
-                if (isInteger(line)) {
-                    int number = Integer.parseInt(line);
-                    String time = reader.readLine();
-                    String[] timeSplit = time.split(" --> ");
-                    String startTime = timeSplit[0].substring(0,8);
-                    String endTime = timeSplit[1].substring(0,8);
-                    String lineOne = reader.readLine();
-                    String lineTwo = reader.readLine();
-                    String lineThree = "";
-                    if (!lineTwo.equals("")) {
-                        lineThree = reader.readLine();
-                    }
+    public void importSubtitles(String filename) {
+        String fileEnding = filename.substring(filename.length() - 4);
+
+        if (fileEnding.equals(".txt") || fileEnding.equals(".srt")) {
+
+            try {
+                BufferedReader reader = new BufferedReader(new FileReader(filename));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (isInteger(line)) {
+                        int number = Integer.parseInt(line);
+                        String time = reader.readLine();
+                        String[] timeSplit = time.split(" --> ");
+                        String startTime = timeSplit[0].substring(0, 8);
+                        String endTime = timeSplit[1].substring(0, 8);
+                        String lineOne = reader.readLine();
+                        String lineTwo = reader.readLine();
+                        String lineThree = "";
+                        if (!lineTwo.equals("")) {
+                            lineThree = reader.readLine();
+                        }
 
                     /*
                     System.out.println("LineOne= " + lineOne + "\n"
@@ -181,22 +184,22 @@ public class Episode implements Serializable{
                     );
                     */
 
-                    SubtitleBit sub = new SubtitleBit(startTime, endTime, lineOne, lineTwo, lineThree, number);
-                    addSubtitleBit(sub);
+                        SubtitleBit sub = new SubtitleBit(startTime, endTime, lineOne, lineTwo, lineThree, number);
+                        addSubtitleBit(sub);
+
+                    }
 
                 }
+                reader.close();
 
+            } catch (Exception e) {
+                System.err.format("Exception occurred trying to read '%s'.", filename);
+                e.printStackTrace();
             }
-            reader.close();
-
-        }
-        catch (Exception e)
-        {
-            System.err.format("Exception occurred trying to read '%s'.", filename);
-            e.printStackTrace();
+        } else {
+            JOptionPane.showMessageDialog(null, "TakeNote can currently only open SRT Subtitles, with file endings .txt or .srt");
         }
     }
-
 
 
     /* -------------------------------------------------------------------

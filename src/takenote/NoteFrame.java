@@ -18,9 +18,7 @@ import java.util.stream.Collectors;
 
 
 
-//TODO: Fix input of new Episode, remove Episode (add Cancel option)s
-//TODO: Fix handling of SceneNotes when removing Subtitles, add Warning!
-//TODO: Add functionality to add SceneNote without Subtitles present
+
 //TODO: Add functionality to set custom Start Time for SceneNote
 //TODO: Add ability to save and load file(s)
 
@@ -51,9 +49,6 @@ public class NoteFrame extends JFrame {
     private JButton addEpisodeButton = new JButton("Add Episode");
     private JButton removeEpisodeButton = new JButton("Remove Episode");
     private JButton addSceneNoteButton = new JButton("Add Note");
-    private JButton removeSceneNoteButton = new JButton("Remove Note");
-    private JButton addTagButton = new JButton("Add Tag");
-    private JButton removeTagButton = new JButton("Remove Tag");
     private JButton addSubtitlesButton = new JButton("Add Subtitles");
     private JButton removeSubtitlesButton = new JButton("Remove Subtitles");
 
@@ -143,9 +138,6 @@ public class NoteFrame extends JFrame {
         topPanel.add(addEpisodeButton);
         topPanel.add(removeEpisodeButton);
         topPanel.add(addSceneNoteButton);
-        topPanel.add(removeSceneNoteButton);
-        topPanel.add(addTagButton);
-        topPanel.add(removeTagButton);
         topPanel.add(addSubtitlesButton);
         topPanel.add(removeSubtitlesButton);
 
@@ -155,9 +147,6 @@ public class NoteFrame extends JFrame {
         addEpisodeButton.addActionListener(new ButtonListener(this));
         removeEpisodeButton.addActionListener(new ButtonListener(this));
         addSceneNoteButton.addActionListener(new ButtonListener(this));
-        removeSceneNoteButton.addActionListener(new ButtonListener(this));
-        addTagButton.addActionListener(new ButtonListener(this));
-        removeTagButton.addActionListener(new ButtonListener(this));
         addSubtitlesButton.addActionListener(new ButtonListener(this));
         removeSubtitlesButton.addActionListener(new ButtonListener(this));
         setupMovementButtons();
@@ -315,7 +304,7 @@ public class NoteFrame extends JFrame {
                 }
 
             } else {
-                System.out.println("Name only contains spaces");
+                System.out.println("Name cannot only contains spaces");
             }
             updateAll();
         }
@@ -490,7 +479,7 @@ public class NoteFrame extends JFrame {
         inputs.add(taliases, "wrap");
         inputs.add(alias, "grow, pushx, wrap");
 
-        String[] buttons = { "Save", "Delete Tag", "Remove Alias", "Cancel" };
+        String[] buttons = { "Save", "Delete Tag", "Handle Alias(es)", "Cancel" };
 
         int ans = JOptionPane.showOptionDialog(NoteFrame.this, inputs, "Edit Tag", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, buttons, buttons[0]);
 
@@ -504,10 +493,15 @@ public class NoteFrame extends JFrame {
             }
         } else if (ans == 0) {
             String newName = tagName.getText().trim();
-            if (note.tagExists(newName) && alias.getText().trim().isEmpty()) {
+
+            if (note.tagExists(newName) && alias.getText().trim().isEmpty() && !t.getTag().equals(newName) && !t.hasAlias(newName)) {
                 JOptionPane.showMessageDialog(NoteFrame.this, "A Tag already exists with that name. Tag name remains unchanged");
             } else {
                 if (!justSpacesInString(newName)) {
+                    if (t.hasAlias(newName)) {
+                        t.removeAlias(newName);
+                        t.addAlias(t.getTag());
+                    }
                     t.setTag(newName);
                 }
             }
@@ -534,23 +528,32 @@ public class NoteFrame extends JFrame {
             JComboBox<String> aliasCombo = new JComboBox<>();
             if (t.getAliases().isEmpty()) {
                 String[] OK_button = {"OK"};
-                JOptionPane.showOptionDialog(NoteFrame.this, "No Aliases to remove", "No Aliases", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, OK_button, OK_button[0]);
+                JOptionPane.showOptionDialog(NoteFrame.this, "No Aliases to handle", "No Aliases", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, OK_button, OK_button[0]);
             } else {
                 JPanel removeAliasPanel = new JPanel(new MigLayout());
-                JLabel removeAliasLabel = new JLabel("Choose an alias to remove:");
+                JLabel removeAliasLabel = new JLabel("Choose an alias to:");
                 t.getAliases().forEach(aliasCombo::addItem);
                 aliasCombo.setEditable(false);
                 removeAliasPanel.add(removeAliasLabel, "wrap");
-                removeAliasPanel.add(aliasCombo);
+                removeAliasPanel.add(aliasCombo, "grow");
 
-                String[] removeAliasButtons = {"Remove", "Cancel"};
+                String[] removeAliasButtons = {"Remove", "Choose to Dispaly",  "Cancel"};
                 int removeAliasAns = JOptionPane.showOptionDialog(NoteFrame.this, removeAliasPanel, "Remove Alias!", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, removeAliasButtons, removeAliasButtons[1]);
 
                 if (removeAliasAns == 0) {
                     if (aliasCombo.getSelectedItem() != null) {
                         t.removeAlias(aliasCombo.getSelectedItem().toString());
                     }
+                } else if (removeAliasAns == 1) {
+                    if (aliasCombo.getSelectedItem() != null) {
+                        String newDisplay = aliasCombo.getSelectedItem().toString();
+                        t.addAlias(t.getTag());
+                        t.removeAlias(newDisplay);
+                        t.setTag(newDisplay);
+
+                    }
                 }
+
             }
 
         }
@@ -571,9 +574,7 @@ public class NoteFrame extends JFrame {
                         JLabel label = (JLabel) e.getSource();
                         Tag tag = (Tag) label.getClientProperty("getTag");
                         editTag(tag);
-                        updateTags();
-                        tagsPanel.revalidate();
-                        tagsPanel.repaint();
+                        updateAll();
                     }
                 }
                 @Override                public void mousePressed(MouseEvent e) {               }
@@ -627,7 +628,8 @@ public class NoteFrame extends JFrame {
     }
 
 
-    private void updateSceneNotes(){
+
+    private void updateSceneNotes() {
         scenePanel.removeAll();
         try {
             scenePanel.add(new JLabel("<html><h1> Notes and Tags for " + note.getSelectedEpisode().toString() + "</h1></html>"), "wrap");
@@ -645,16 +647,18 @@ public class NoteFrame extends JFrame {
             JPanel tagPanel = new JPanel(new WrapLayout(FlowLayout.CENTER, 22, 7));
             tagPanel.setBackground(Color.decode("#d8d8d8"));
             //Adding order matters! Make sure tagPanel is added first, see tagInput action listener!
-            panel.add(tagPanel, "cell 1 1, grow, pushx, pushy, width 100:300:650");
-
+            panel.add(tagPanel, "cell 1 1, grow, pushx, pushy, width 100:300:650, span");
 
             Java2sAutoTextField tagInputField= new Java2sAutoTextField(note.getTagList());
+            //panel.add(new JLabel("Add Tag(s):"), " cell 1 0");
             panel.add(tagInputField, "cell 1 0, grow, width 150:150:150");
             tagInputField.putClientProperty("getScene", s);
             tagInputField.setStrict(false);
             tagInputField.setText("");
 
             tagInputField.putClientProperty("getTagInput", tagInputField);
+
+            //Tag input
             tagInputField.addMouseListener(new MouseListener() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
@@ -670,47 +674,89 @@ public class NoteFrame extends JFrame {
                 @Override                public void mouseEntered(MouseEvent e) {                }
                 @Override                public void mouseExited(MouseEvent e) {                }
             });
-            tagInputField.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    Java2sAutoTextField input = (Java2sAutoTextField) e.getSource();
-                    String tagText = input.getText().trim();
-                    String[] split = tagText.split("\\(");
-                    tagText = split[0].trim();
-                    input.setText("");
-                    JPanel tagP = (JPanel) input.getParent().getComponent(0);
-                    SceneNote scene = (SceneNote) input.getClientProperty("getScene");
 
-                    if (note.tagExists(tagText)) {
-                        if (!scene.hasTag(note.getTag(tagText))) {
-                            scene.addTag(note.getTag(tagText));
-                        }
+            // Taginput actionlistener
+            tagInputField.addActionListener(e -> {
+                Java2sAutoTextField input = (Java2sAutoTextField) e.getSource();
+                String tagText = input.getText().trim();
+                String[] split = tagText.split("\\(");
+                tagText = split[0].trim();
+                input.setText("");
+                JPanel tagP = (JPanel) input.getParent().getComponent(0);
+                SceneNote scene = (SceneNote) input.getClientProperty("getScene");
 
-                    } else {
-                        if (!justSpacesInString(tagText)) {
-                            Tag tag = new Tag(tagText);
-                            note.addTag(tag);
-                            scene.addTag(tag);
-                        }
+                if (note.tagExists(tagText)) {
+                    if (!scene.hasTag(note.getTag(tagText))) {
+                        scene.addTag(note.getTag(tagText));
                     }
-                    updateTags();
-                    tagsPanel.revalidate();
-                    tagsPanel.repaint();
-                    updateLocalTagPanel(tagP, scene);
 
+                } else {
+                    if (!justSpacesInString(tagText)) {
+                        Tag tag = new Tag(tagText);
+                        note.addTag(tag);
+                        scene.addTag(tag);
+                    }
+                }
+                updateTags();
+                tagsPanel.revalidate();
+                tagsPanel.repaint();
+                updateLocalTagPanel(tagP, scene);
+            });
 
+            //Delete button SceneNote
+            String imagePath = "/images/lightgraycross.png";
+            Image deleteSceneNotePicture = new ImageIcon(this.getClass().getResource(imagePath)).getImage();
+
+            JLabel deleteSceneNoteLabel = new JLabel(new ImageIcon(deleteSceneNotePicture));
+            JPanel deleteSceneNotePanel = new JPanel();
+            deleteSceneNotePanel.add(deleteSceneNoteLabel);
+            panel.add(deleteSceneNotePanel, "cell 2 0, align right, span");
+            deleteSceneNotePanel.putClientProperty("getNote", s);
+            deleteSceneNotePanel.addMouseListener(new MouseListener() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    JPanel p = (JPanel) e.getSource();
+                    SceneNote sn = (SceneNote) p.getClientProperty("getNote");
+                    String warning = "WARNING: Removing a SceneNote will remove all its Tags and its association with the Subtitles. Do you wish to delete the SceneNote?";
+                    String[] b = {"Yes", "No"};
+                    int a = JOptionPane.showOptionDialog(NoteFrame.this, warning, "WARNING!", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, b, b[1]);
+                    if (a == 0) {
+                        note.deleteSceneNote(sn);
+                        updateAll();
+                    }
+                }
+                @Override                public void mousePressed(MouseEvent e) {                }
+                @Override                public void mouseReleased(MouseEvent e) {                }
+                @Override                public void mouseEntered(MouseEvent e) {
+                    JPanel p = (JPanel) e.getSource();
+                    Image redCross = new ImageIcon(this.getClass().getResource("/images/redcross.png")).getImage();
+                    JLabel redCrossL = new JLabel(new ImageIcon(redCross));
+                    p.removeAll();
+                    p.add(redCrossL);
+                    p.revalidate();
+                    p.repaint();
+                    System.out.println("Entering");
+
+                }
+                @Override                public void mouseExited(MouseEvent e) {
+                    JPanel p = (JPanel) e.getSource();
+                    Image redCross = new ImageIcon(this.getClass().getResource("/images/lightgraycross.png")).getImage();
+                    JLabel redCrossL = new JLabel(new ImageIcon(redCross));
+                    p.removeAll();
+                    p.add(redCrossL);
+                    p.revalidate();
+                    p.repaint();
+                    System.out.println("Xiting");
 
                 }
             });
 
-            panel.add(new JLabel("Start time: " + s.getStartTime()), "cell 0 0, grow");
-            panel.add(new JLabel("Add Tag(s):"), "align right, cell 0 0");
-
+            //panel.add(new JLabel("Start time: " + s.getStartTime()), "cell 1 0, align right");
 
 
 
             JTextArea textArea = new JTextArea(s.getNote());
-            textArea.setPreferredSize(new Dimension(500, 32));
+            textArea.setPreferredSize(new Dimension(500, 65));
             textArea.setMaximumSize(new Dimension(500, 1000));
             textArea.setWrapStyleWord(true);
             textArea.setLineWrap(true);
@@ -732,7 +778,7 @@ public class NoteFrame extends JFrame {
                 @Override                public void mouseExited(MouseEvent e) {                }
             });
             activeNotesList.add(textArea);
-            panel.add(textArea, "cell 0 1, grow, width 100:500:500");
+            panel.add(textArea, "cell 0 0, spany, grow, width 100:500:500");
 
 
             JLabel sn = new JLabel(s.getNote());
@@ -849,25 +895,30 @@ public class NoteFrame extends JFrame {
             noEpispdeWithoutSeason();
             return;
         }
-
-        JComboBox<Season> seasonComboBox = new JComboBox<>();
-        note.getSeasons().forEach(seasonComboBox::addItem);
-        seasonComboBox.setEditable(false);
         JTextField episodeName = new JTextField();
+        JComboBox<Season> season = new JComboBox<>();
+        note.getSeasons().forEach(season::addItem);
+        season.setEditable(false);
+        season.setSelectedIndex(0);
 
-        JPanel inputs = createInputs(episodeName, seasonComboBox, true);
+        JPanel inputs = createInputs(episodeName, season, true);
+        String[] buttons = { "Save", "Cancel" };
 
-        JOptionPane.showMessageDialog(window, inputs, "Add Episode", JOptionPane.PLAIN_MESSAGE);
+        int ans = JOptionPane.showOptionDialog(NoteFrame.this, inputs, "Edit Episode", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, buttons, buttons[0]);
 
-        // Keeps prompting the user for inputs until valid input is given
-        while (shouldAskAgain(episodeName)) {
-            inputs = popup(changeInputs(inputs, episodeName), "Add Episode", JOptionPane.PLAIN_MESSAGE);
+
+        if (ans == 0) {
+            String newName = episodeName.getText().trim();
+            if (!justSpacesInString(newName)) {
+                Season newSeason = (Season) season.getSelectedItem();
+                Episode e = new Episode(newName, newSeason);
+                newSeason.addEpisode(e);
+
+            } else {
+                System.out.println("Name cannot only contains spaces");
+            }
+            updateAll();
         }
-
-        Season season = (Season) seasonComboBox.getSelectedItem();
-        Episode newEp = new Episode(episodeName.getText().trim(), season);
-        note.addEpisode(newEp, season);
-        updateSeasons();
     }
 
 
@@ -875,20 +926,45 @@ public class NoteFrame extends JFrame {
     // that are associated with that sub category
     public void removeEpisode() {
         if (note.getSeasons().isEmpty()) { return; }
-        Collection<Object> selectFrom = note.getSeasons().stream().collect(Collectors.toList());
-        Season seasonToRemoveFrom = (Season) selectItem("Choose Season to remove Episode from", selectFrom);
+        if (note.getSelectedEpisode() != null) {
+            Episode e = note.getSelectedEpisode();
+            String warning = "WARNING: Removing an Episode will remove all its SceneNotes, Subtitles and Tags. Do you wish to delete the Episode?";
+            String[] b = {"Yes", "No"};
+            int r = JOptionPane.showOptionDialog(NoteFrame.this, warning, "WARNING!", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, b, b[1]);
+            if (r == 0) {
+                note.removeEpisode(e);
+                updateAll();
+            }
+        } else {
+            JComboBox<Season> season = new JComboBox<>();
+            note.getSeasons().forEach(season::addItem);
+            season.setEditable(false);
+            season.setSelectedIndex(0);
+            String[] buttons = {"Choose Season", "Cancel"};
+            int ans = JOptionPane.showOptionDialog(NoteFrame.this, season, "Choose Season to delete Episode from", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, buttons, buttons[0]);
 
+            if (ans == 0) {
+                Season s = (Season) season.getSelectedItem();
+                JComboBox<Episode> episode = new JComboBox<>();
+                s.getEpisodeList().forEach(episode::addItem);
+                episode.setEditable(false);
+                episode.setSelectedIndex(0);
 
-        if (seasonToRemoveFrom.getEpisodeList().isEmpty()) { return; }
-        Collection<Object> selectEpFrom = seasonToRemoveFrom.getEpisodeList().stream().collect(Collectors.toList());
-        Episode episodeToRemove = (Episode) selectItem("Remove Episode", selectEpFrom);
+                int a = JOptionPane.showOptionDialog(NoteFrame.this, episode, "Choose Episode to delete", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, buttons, buttons[0]);
 
-        int answer = removeWarning("Warning - Removing an Episode" +
-                " will remove all its SceneNotes. Do you wish to proceed?");
-        if (answer == JOptionPane.YES_OPTION) {
-            note.removeEpisode(episodeToRemove);
+                if (a == 0) {
+                    Episode e = (Episode) episode.getSelectedItem();
+                    String warning = "WARNING: Removing an Episode will remove all its SceneNotes, Subtitles and Tags. Do you wish to delete the Episode?";
+                    String[] b = {"Yes", "No"};
+                    int r = JOptionPane.showOptionDialog(NoteFrame.this, warning, "WARNING!", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, b, b[1]);
+                    if (r == 0) {
+                        note.removeEpisode(e);
+                        updateAll();
+                    }
+                }
+            }
         }
-        updateSeasons();
+
     }
     
     
@@ -956,11 +1032,15 @@ public class NoteFrame extends JFrame {
 
 
     public void removeSubtitles() {
-        note.getSelectedEpisode().clearSubtitles();
-        updateSubtitles();
-        window.revalidate();
-        window.repaint();
-
+        String warning = "WARNING: Removing Subtitles will remove all association with its SceneNotes. Do you wish to delete the Subtitles?";
+        String[] b = {"Yes", "No"};
+        int r = JOptionPane.showOptionDialog(NoteFrame.this, warning, "WARNING!", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, b, b[1]);
+        if (r == 0) {
+            note.removeSubtitles();
+            updateSubtitles();
+            subtitlePanel.revalidate();
+            subtitlePanel.repaint();
+        }
     }
 
 
@@ -971,11 +1051,8 @@ public class NoteFrame extends JFrame {
     public JButton getAddEpisodeButton() {return addEpisodeButton;}
     public JButton getRemoveEpisodeButton() {return removeEpisodeButton;}
     public JButton getAddSceneNoteButton() {return addSceneNoteButton;}
-    public JButton getRemoveSceneNoteButton() {return removeSceneNoteButton;};
-    public JButton getAddTagButton() {return addTagButton;}
-    public JButton getRemoveTagButton() {return removeTagButton;};
     public JButton getAddSubtitlesButton() {return addSubtitlesButton;}
-    public JButton getRemoveSubtitlesButton() {return removeSubtitlesButton;};
+    public JButton getRemoveSubtitlesButton() {return removeSubtitlesButton;}
 
 
 }

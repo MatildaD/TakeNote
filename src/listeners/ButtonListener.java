@@ -1,6 +1,7 @@
 package listeners;
 
 
+import components.SubtitleBit;
 import takenote.NoteFrame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -32,57 +33,10 @@ public class ButtonListener implements ActionListener {
             noteFrame.openSubtitles();
         }  else if (e.getSource().equals(noteFrame.getRemoveSubtitlesButton())) {
             noteFrame.removeSubtitles();
+        }  else if (e.getSource().equals(noteFrame.getAddSceneNoteButton())) {
+            noteFrame.newSceneNote(new SubtitleBit("00:00:00", "00:00:00", "","","", 0));
     }
     }
 
 
-
-
-    /**
-    public void actionPerformed(ActionEvent e) {
-
-        if (e.getSource().equals(noteFrame.getAddAccountButton())) {
-            noteFrame.addAccount();
-        } else if (e.getSource().equals(noteFrame.getRemoveAccountButton())) {
-            noteFrame.removeAccount();
-
-        } else if (e.getSource().equals(noteFrame.getBudgetButton())) {
-            noteFrame.changeMainTo(noteFrame.getBudgetPanel());
-
-        } else if (e.getSource().equals(noteFrame.getTransactionsButton())) {
-            noteFrame.changeMainTo(noteFrame.getTransactionPanel());
-
-        } else if (e.getSource().equals(noteFrame.getReportButton())) {
-            noteFrame.changeMainTo(noteFrame.getReportPanel());
-
-        } else if (e.getSource().equals(noteFrame.getEditAccountButton())) {
-            noteFrame.editAccount();
-
-        } else if (e.getSource().equals(noteFrame.getAddMainCategoryButton())) {
-            noteFrame.addMainCategory();
-
-        } else if (e.getSource().equals(noteFrame.getRemoveMainCategoryButton())) {
-            noteFrame.removeMainCategory();
-
-        } else if (e.getSource().equals(noteFrame.getEditMainCategoryButton())) {
-            noteFrame.editMainCategory();
-
-        } else if (e.getSource().equals(noteFrame.getAddSubCategoryButton())) {
-            noteFrame.addSubCategory();
-
-        } else if (e.getSource().equals(noteFrame.getRemoveSubCategoryButton())) {
-            noteFrame.removeSubCategory();
-
-        } else if (e.getSource().equals(noteFrame.getEditSubCategoryButton())) {
-            noteFrame.editSubCategory();
-
-        } else if (e.getSource().equals(noteFrame.getAddTransactionButton())) {
-            noteFrame.addTransaction();
-
-        } else if (e.getSource().equals(noteFrame.getRemoveTransactionButton())) {
-            noteFrame.removeTransaction();
-        }
-    }
-
-     **/
 }

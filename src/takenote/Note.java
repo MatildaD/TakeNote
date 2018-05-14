@@ -1,12 +1,11 @@
 package takenote;
 
-import components.Episode;
-import components.SceneNote;
-import components.Season;
-import components.Tag;
+import components.*;
+import javafx.scene.Scene;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Note implements Serializable{
@@ -111,8 +110,41 @@ public class Note implements Serializable{
         }
 
     }
+    /* -------------------------------------------------------------------
+     * 	Notes
+     *  ------------------------------------------------------------------*/
 
+    public void deleteSceneNote(SceneNote s) {
+        if (selectedEpisode != null) {
+            selectedEpisode.removeNote(s);
+            selectedEpisode.setActiveSceneNote(null);
+            System.out.println("No of tags :" + s.getTagList().size());
+            for (Tag t: s.getTagList()) {
+                System.out.println("Occurances of tag " + t.getTag()+ " = " + multipleOccurrencesOfTag(t));
 
+                if (!multipleOccurrencesOfTag(t) ) {
+                    tagList.remove(t);
+                }
+            }
+        }
+    }
+    /* -------------------------------------------------------------------
+     * 	Subtitles
+     *  ------------------------------------------------------------------*/
+
+    public void removeSubtitles() {
+        if (selectedEpisode != null) {
+
+            List<SubtitleBit> subtitleBitList = selectedEpisode.getSubtitles();
+            for (SceneNote s : selectedEpisode.getNotes()) {
+                if (subtitleBitList.contains(s.getSub())) {
+                    s.removeSub();
+                }
+            }
+
+            selectedEpisode.clearSubtitles();
+        }
+    }
 
 
     /* -------------------------------------------------------------------
