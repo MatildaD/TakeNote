@@ -2,7 +2,9 @@ package takenote;
 
 
 import components.*;
+import enums.Selected;
 import external.Java2sAutoTextField;
+import external.TextPrompt;
 import external.WrapLayout;
 import net.miginfocom.swing.MigLayout;
 import listeners.ButtonListener;
@@ -45,12 +47,12 @@ public class NoteFrame extends JFrame {
     private JPanel topPanel = new JPanel(new MigLayout());
 
     private JButton addSeasonButton = new JButton("Add Season");
-    private JButton removeSeasonButton = new JButton("Remove Season");
+    private JButton removeSeasonButton = new JButton("Delete Season");
     private JButton addEpisodeButton = new JButton("Add Episode");
-    private JButton removeEpisodeButton = new JButton("Remove Episode");
+    private JButton removeEpisodeButton = new JButton("Delete Episode");
     private JButton addSceneNoteButton = new JButton("Add Note");
     private JButton addSubtitlesButton = new JButton("Add Subtitles");
-    private JButton removeSubtitlesButton = new JButton("Remove Subtitles");
+    private JButton removeSubtitlesButton = new JButton("Delete Subtitles");
 
     //Scrolly panels
     private JScrollPane subtitleScroll;
@@ -88,7 +90,7 @@ public class NoteFrame extends JFrame {
     private JSplitPane subtitleNotesAndSeasons;
     private JSplitPane topAndBottom;
     private JSplitPane tagsAndNotes;
-    
+
 
     public JPanel getTagsPanel() {
         return tagsPanel;
@@ -560,17 +562,42 @@ public class NoteFrame extends JFrame {
         tagsPanel.removeAll();
         for (Tag t: note.getTagList()) {
             JLabel l = new JLabel(t.getTag());
+
             tagsPanel.add(l, "wrap");
+
+            if (t.getSelectedStatus() == Selected.CONTAINS) {
+                l.setOpaque(true);
+                l.setBackground(Color.lightGray);
+            } else if (t.getSelectedStatus() == Selected.NOT_CONTAINS) {
+                l.setOpaque(true);
+                l.setBackground(Color.red);
+            }
+
+
+
             l.putClientProperty("getTag", t);
 
             l.addMouseListener(new MouseListener() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    if (e.getClickCount() == 2) {
-                        JLabel label = (JLabel) e.getSource();
-                        Tag tag = (Tag) label.getClientProperty("getTag");
+                    JLabel label = (JLabel) e.getSource();
+                    Tag tag = (Tag) label.getClientProperty("getTag");
+                    if (e.getClickCount() == 2 && !e.isControlDown()) {
+
                         editTag(tag);
                         updateAll();
+                    } else if (e.getClickCount() == 1 && SwingUtilities.isRightMouseButton(e)) {
+                        tag.setSelectedStatus(Selected.DESELECTED);
+                        updateTags();
+                        tagsPanel.revalidate();
+                        tagsPanel.repaint();
+                    } else if (e.getClickCount() == 1 ) {
+                        System.out.println("Single click!");
+
+                        tag.rotateSelected();
+                        updateTags();
+                        tagsPanel.revalidate();
+                        tagsPanel.repaint();
                     }
                 }
                 @Override                public void mousePressed(MouseEvent e) {               }
@@ -643,11 +670,15 @@ public class NoteFrame extends JFrame {
             JPanel tagPanel = new JPanel(new WrapLayout(FlowLayout.CENTER, 22, 7));
             tagPanel.setBackground(Color.decode("#d8d8d8"));
             //Adding order matters! Make sure tagPanel is added first, see tagInput action listener!
-            panel.add(tagPanel, "cell 1 1, grow, pushx, pushy, width 100:300:650, span");
+            panel.add(tagPanel, "cell 1 1, grow, pushx, pushy, spany, width 100:300:650");
 
             Java2sAutoTextField tagInputField= new Java2sAutoTextField(note.getTagList());
+            TextPrompt textPrompt = new TextPrompt("Add tag(s):", tagInputField);
+            textPrompt.setForeground( Color.LIGHT_GRAY );
+            textPrompt.changeStyle(Font.ITALIC);
+            textPrompt.setShow(TextPrompt.Show.FOCUS_LOST);
             //panel.add(new JLabel("Add Tag(s):"), " cell 1 0");
-            panel.add(tagInputField, "cell 1 0, grow, width 150:150:150");
+            panel.add(tagInputField, "cell 1 0, width 50:200:200, height 23:23:23, aligny top");
             tagInputField.putClientProperty("getScene", s);
             tagInputField.setStrict(false);
             tagInputField.setText("");
@@ -706,7 +737,7 @@ public class NoteFrame extends JFrame {
             JLabel deleteSceneNoteLabel = new JLabel(new ImageIcon(deleteSceneNotePicture));
             JPanel deleteSceneNotePanel = new JPanel();
             deleteSceneNotePanel.add(deleteSceneNoteLabel);
-            panel.add(deleteSceneNotePanel, "cell 2 0, align right, span");
+            panel.add(deleteSceneNotePanel, "cell 3 0, align right, aligny top");
             deleteSceneNotePanel.putClientProperty("getNote", s);
             deleteSceneNotePanel.addMouseListener(new MouseListener() {
                 @Override
@@ -752,8 +783,7 @@ public class NoteFrame extends JFrame {
 
 
             JTextArea textArea = new JTextArea(s.getNote());
-            textArea.setPreferredSize(new Dimension(500, 65));
-            textArea.setMaximumSize(new Dimension(500, 1000));
+            textArea.setPreferredSize(new Dimension(100, 60));
             textArea.setWrapStyleWord(true);
             textArea.setLineWrap(true);
             textArea.putClientProperty("getScene", s);
@@ -774,7 +804,7 @@ public class NoteFrame extends JFrame {
                 @Override                public void mouseExited(MouseEvent e) {                }
             });
             activeNotesList.add(textArea);
-            panel.add(textArea, "cell 0 0, spany, grow, width 100:500:500");
+            panel.add(textArea, "cell 0 0, spany, grow, width 100:500:700");
 
 
             JLabel sn = new JLabel(s.getNote());

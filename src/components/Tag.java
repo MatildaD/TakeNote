@@ -1,5 +1,7 @@
 package components;
 
+import enums.Selected;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +11,7 @@ public class Tag implements Serializable {
 
     private String tag;
     private List<String> aliases;
+    private Selected selectedStatus;
 
     /* -------------------------------------------------------------------
      * 	Constructor
@@ -16,6 +19,7 @@ public class Tag implements Serializable {
     public Tag(String tag) {
         this.tag = tag;
         this.aliases = new ArrayList<>();
+        this.selectedStatus = Selected.DESELECTED;
     }
 
     public void setTag(String tag) {
@@ -40,6 +44,23 @@ public class Tag implements Serializable {
         }
     }
 
+    public Selected getSelectedStatus() {
+        return selectedStatus;
+    }
+
+    public void setSelectedStatus(Selected selectedStatus) {
+        this.selectedStatus = selectedStatus;
+    }
+
+    public void rotateSelected() {
+        if (selectedStatus == Selected.DESELECTED) {
+            selectedStatus = Selected.CONTAINS;
+        } else if (selectedStatus == Selected.CONTAINS) {
+            selectedStatus = Selected.NOT_CONTAINS;
+        } else if (selectedStatus == Selected.NOT_CONTAINS) {
+            selectedStatus = Selected.DESELECTED;
+        }
+    }
 
 
     public boolean hasAlias(String name) {

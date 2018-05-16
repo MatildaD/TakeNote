@@ -104,9 +104,6 @@ public class Note implements Serializable{
                     break;
                 }
             }
-
-
-
         }
 
     }
@@ -118,10 +115,7 @@ public class Note implements Serializable{
         if (selectedEpisode != null) {
             selectedEpisode.removeNote(s);
             selectedEpisode.setActiveSceneNote(null);
-            System.out.println("No of tags :" + s.getTagList().size());
             for (Tag t: s.getTagList()) {
-                System.out.println("Occurances of tag " + t.getTag()+ " = " + multipleOccurrencesOfTag(t));
-
                 if (!multipleOccurrencesOfTag(t) ) {
                     tagList.remove(t);
                 }
