@@ -14,6 +14,12 @@ public class Note implements Serializable{
     private String name;
     private Episode selectedEpisode;
     private List<Tag> tagList;
+    private String lastSavedPath;
+
+
+    final String FILEENDING = ".note";
+
+
 
 
     /* -------------------------------------------------------------------
@@ -25,6 +31,7 @@ public class Note implements Serializable{
         this.seasons = new ArrayList<>();
         this.selectedEpisode = null;
         this.tagList = new ArrayList<>();
+        this.lastSavedPath = "";
     }
 
     /* -------------------------------------------------------------------
@@ -47,6 +54,14 @@ public class Note implements Serializable{
         return tagList;
     }
 
+    public String getFILEENDING() {
+        return FILEENDING;
+    }
+
+    public String getLastSavedPath() {
+        return lastSavedPath;
+    }
+
     /* -------------------------------------------------------------------
      * 	Setters
      *  ------------------------------------------------------------------*/
@@ -65,6 +80,10 @@ public class Note implements Serializable{
 
     public void setTagList(List<Tag> tagList) {
         this.tagList = tagList;
+    }
+
+    public void setLastSavedPath(String lastSavedPath) {
+        this.lastSavedPath = lastSavedPath;
     }
 
     /* -------------------------------------------------------------------
@@ -213,4 +232,33 @@ public class Note implements Serializable{
         }
         return false;
     }
+
+
+
+    public List<Tag> searchTags(String searchString, List<Tag> foundSoFar) {
+        searchString = searchString.toString();
+        List<Tag> foundTags = new ArrayList<>();
+        List<Tag> searchFrom = foundSoFar;
+        if (foundSoFar == null) {
+            searchFrom = tagList;
+        }
+
+        for (Tag t: searchFrom) {
+            if (t.getTag().toLowerCase().contains(searchString)) {
+                foundTags.add(t);
+
+            } else {
+                for (String alias: t.getAliases()) {
+                    if (alias.toLowerCase().contains(searchString)) {
+                        foundTags.add(t);
+                        break;
+                    }
+                }
+            }
+        }
+        return foundTags;
+
+    }
+
+
 }

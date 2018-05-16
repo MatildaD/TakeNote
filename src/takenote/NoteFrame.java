@@ -1,11 +1,13 @@
 package takenote;
 
 
+import com.sun.org.apache.xpath.internal.SourceTree;
 import components.*;
 import enums.Selected;
 import external.Java2sAutoTextField;
 import external.TextPrompt;
 import external.WrapLayout;
+import fileio.SaveNote;
 import net.miginfocom.swing.MigLayout;
 import listeners.ButtonListener;
 
@@ -13,7 +15,7 @@ import listeners.ButtonListener;
 import java.awt.*;
 import javax.swing.*;
 import java.awt.event.*;
-import java.io.File;
+import java.io.*;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,12 +24,12 @@ import java.util.stream.Collectors;
 
 
 //TODO: Add functionality to set custom Start Time for SceneNote
-//TODO: Add ability to save and load file(s)
+
 
 //TODO: Add functionality to add choose/add/remove Color for tags
 //TODO: Add functionality to Select Season and add notes to Season
 //TODO: Add functionality to Search using Tags
-//TODO: Add functionality to differentiate between single and double clicks
+
 
 public class NoteFrame extends JFrame {
 
@@ -69,6 +71,10 @@ public class NoteFrame extends JFrame {
     private List<JTextArea> activeNotesList;
     private List<SubtitleBit> activeSubtitleBits;
 
+    //Tags
+    private List<Tag> foundTags;
+
+
 
 
     NoteFrame(Note note) {
@@ -99,6 +105,7 @@ public class NoteFrame extends JFrame {
     private void setupFrame() {
         activeNotesList = new ArrayList<>();
         activeSubtitleBits = new ArrayList<>();
+        foundTags = null;
 
         seasonPanel.setBackground(Color.white);
         subtitlePanel.setBackground(Color.white);
@@ -147,14 +154,184 @@ public class NoteFrame extends JFrame {
         addSceneNoteButton.addActionListener(new ButtonListener(this));
         addSubtitlesButton.addActionListener(new ButtonListener(this));
         removeSubtitlesButton.addActionListener(new ButtonListener(this));
-        setupMovementButtons();
+        setupTagSearch();
+        createMenus();
 
         window.add(topAndBottom);
     }
 
-    private void setupMovementButtons() {
+    private void createMenus() {
+        final JMenu file = new JMenu("File");
+        file.setMnemonic('F');
+
+        JMenuItem save = new JMenuItem("Save", 'S');
+        JMenuItem load = new JMenuItem("Load", 'L');
+        file.add(save);
+        file.add(load);
+        final JMenuBar menuBar = new JMenuBar();
+        menuBar.add(file);
+        window.setJMenuBar(menuBar);
+
+        final ActionListener al = e -> {
+
+            if (e.getSource().equals(save)) {
+                save();
+
+            } else if (e.getSource().equals(load)) {
+                load();
+            }
+        };
+
+        save.addActionListener(al);
+        load.addActionListener(al);
+
+        window.revalidate();
+        window.repaint();
 
     }
+
+    // Attempts to save the current budget to file based on user input filename
+    private void save() {
+        int answer = 0;
+        if (!note.getLastSavedPath().equals("")) {
+            fc.setSelectedFile(new File(note.getLastSavedPath()));
+        }
+        int returnVal = fc.showSaveDialog(NoteFrame.this);
+
+
+
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            File file = fc.getSelectedFile();
+            System.out.println(file.getName());
+
+            // Add correct file extension
+            if (file.getName().length() <= note.getFILEENDING().length()) {
+                file = new File(file.toString() + note.getFILEENDING());
+            } else if (!file.getName().toLowerCase().substring(file.getName().length()-note.getFILEENDING().length()).equals(note.getFILEENDING())) {
+                file = new File(file.toString() + note.getFILEENDING());
+            }
+
+            if (file.exists() && !file.isDirectory()) {
+                String warning = "A file already exists with that name. Do you wish to overwrite it?";
+                String[] b = {"Overwrite", "Cancel"};
+                answer = JOptionPane.showOptionDialog(NoteFrame.this, warning, "File already exists", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, b, b[1]);
+            }
+
+        if (answer == 0) {
+            try (FileOutputStream fileOut = new FileOutputStream(file.getAbsolutePath())) {
+                try (ObjectOutput out = new ObjectOutputStream(fileOut)) {
+                    out.writeObject(note);
+                    out.close();
+                    fileOut.close();
+
+                    note.setLastSavedPath(file.getAbsolutePath());
+                }
+            } catch (IOException problem) {
+                problem.printStackTrace();
+            }
+        }
+        }
+
+    }
+
+
+    // Asks user if they want to save the current budget before opening a new one,
+    // then asks for a filename. If it exists, the budget opens. If not, the user
+    // gets a message and the program continues with the current budget.
+    private void load() {
+
+        String warning = "Do you wish to save your current session before loading a new one?";
+        String[] b = {"Yes", "No"};
+        int answer = JOptionPane.showOptionDialog(NoteFrame.this, warning, "Save current first?", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, b, b[1]);
+        if (answer == 0) {
+            save();
+
+        }
+
+        int returnVal = fc.showOpenDialog(NoteFrame.this);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            File file = fc.getSelectedFile();
+
+            // Tries to open the requested file
+            try (FileInputStream fileIn = new FileInputStream(file.getAbsolutePath())) {
+                try (ObjectInput in = new ObjectInputStream(fileIn)) {
+                    Note newNote = (Note) in.readObject();
+                    in.close();
+                    fileIn.close();
+                    note = newNote;
+                    updateAll();
+
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+
+            } catch (FileNotFoundException fex) {
+                System.out.println("File could not be found");
+                fex.printStackTrace();
+            } catch (IOException iex) {
+                iex.printStackTrace();
+            } catch (ClassNotFoundException cex) {
+                System.out.println("Class not found");
+                cex.printStackTrace();
+            }
+        }
+
+    }
+
+
+
+
+    private void setupTagSearch() {
+        JTextField tagSearchField = new JTextField();
+        tagSearchField.addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                System.out.println("KeyEvent " + e.toString());
+                JTextField tagField = (JTextField) e.getSource();
+
+                System.out.println("Keycode = " + e.getKeyCode());
+
+                System.out.println("Input: " + tagField.getText() );
+
+                if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
+                    System.out.println("backspace");
+                    foundTags = null;
+                }
+
+                foundTags = note.searchTags(tagField.getText(), foundTags);
+                updateTags();
+                tagsPanel.revalidate();
+                tagsPanel.repaint();
+            }
+        });
+
+
+        tagSearchField.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JTextField searchField = (JTextField) e.getSource();
+                searchField.setText("");
+                foundTags = null;
+                updateTags();
+                tagsPanel.revalidate();
+                tagsPanel.repaint();
+            }
+        });
+
+
+        topPanel.add(tagSearchField, "aligny baseline, align right, width 150, height 30");
+    }
+
 
 
 
@@ -175,12 +352,14 @@ public class NoteFrame extends JFrame {
                 public void mouseClicked(MouseEvent e) {
                     JLabel label = (JLabel) e.getSource();
                     Season season = (Season) label.getClientProperty("getSe");
-                    if (e.getClickCount() == 1) {
+                    if (SwingUtilities.isLeftMouseButton(e)) {
                         season.flipExpands();
                         updateSubtitles();
                         updateSeasons();
-                        window.revalidate();
-                        window.repaint();
+                        subtitlePanel.revalidate();
+                        subtitlePanel.repaint();
+                        seasonPanel.revalidate();
+                        seasonPanel.repaint();
                     }
                 }
                 @Override                public void mousePressed(MouseEvent e) {                }
@@ -391,6 +570,7 @@ public class NoteFrame extends JFrame {
 
                         SubtitleBit bit = (SubtitleBit) l.getClientProperty("getBit");
                         saveNotes();
+                        bit.setScrollPos(subtitleScroll.getViewport().getViewPosition());
                         newSceneNote(bit);
                         updateSceneNotes();
                         updateSubtitles(bit);
@@ -560,7 +740,9 @@ public class NoteFrame extends JFrame {
 
     public void updateTags() {
         tagsPanel.removeAll();
-        for (Tag t: note.getTagList()) {
+        List<Tag> tagsToDraw = (foundTags != null) ? foundTags : note.getTagList();
+
+        for (Tag t: tagsToDraw) {
             JLabel l = new JLabel(t.getTag());
 
             tagsPanel.add(l, "wrap");
@@ -582,22 +764,28 @@ public class NoteFrame extends JFrame {
                 public void mouseClicked(MouseEvent e) {
                     JLabel label = (JLabel) e.getSource();
                     Tag tag = (Tag) label.getClientProperty("getTag");
-                    if (e.getClickCount() == 2 && !e.isControlDown()) {
+                    if (e.getClickCount() == 1 && SwingUtilities.isMiddleMouseButton(e)) {
 
                         editTag(tag);
                         updateAll();
-                    } else if (e.getClickCount() == 1 && SwingUtilities.isRightMouseButton(e)) {
+                    } else if ( SwingUtilities.isRightMouseButton(e)) { //Open menu (middle click)
                         tag.setSelectedStatus(Selected.DESELECTED);
-                        updateTags();
-                        tagsPanel.revalidate();
-                        tagsPanel.repaint();
-                    } else if (e.getClickCount() == 1 ) {
-                        System.out.println("Single click!");
-
+                        label.setOpaque(false);
+                    } else if (SwingUtilities.isLeftMouseButton(e)) { //Deselect (right click)
                         tag.rotateSelected();
-                        updateTags();
-                        tagsPanel.revalidate();
-                        tagsPanel.repaint();
+                        label.setOpaque(true);
+                        label.revalidate();
+                        label.repaint();
+                        if (tag.getSelectedStatus() == Selected.CONTAINS) {  //Rotate selection (left click)
+                            label.setBackground(Color.lightGray);
+                        } else if (tag.getSelectedStatus() == Selected.NOT_CONTAINS) {
+                            label.setBackground(Color.red);
+                        } else if (tag.getSelectedStatus() == Selected.DESELECTED) {
+                            label.setOpaque(false);
+                        }
+                        label.revalidate();
+                        label.repaint();
+
                     }
                 }
                 @Override                public void mousePressed(MouseEvent e) {               }
@@ -762,7 +950,6 @@ public class NoteFrame extends JFrame {
                     p.add(redCrossL);
                     p.revalidate();
                     p.repaint();
-                    System.out.println("Entering");
 
                 }
                 @Override                public void mouseExited(MouseEvent e) {
@@ -773,7 +960,6 @@ public class NoteFrame extends JFrame {
                     p.add(redCrossL);
                     p.revalidate();
                     p.repaint();
-                    System.out.println("Xiting");
 
                 }
             });
@@ -852,25 +1038,28 @@ public class NoteFrame extends JFrame {
 
 
         if (ans == 0) {
-            String newName = seasonName.getText().trim();
-            Season s = new Season(newName);
-            if (!justSpacesInString(newName)) {
-                note.addSeason(s);
-                String[] newEpisodes = episodeName.getText().split(",");
+            String[] seasonNames = seasonName.getText().split(",");
+            for (String se: seasonNames) {
+                String newName = se.trim();
+                Season s = new Season(newName);
+                if (!justSpacesInString(newName)) {
+                    note.addSeason(s);
+                    String[] newEpisodes = episodeName.getText().split(",");
 
-                for (String ep : newEpisodes) {
-                    ep = ep.trim();
-                    if (!justSpacesInString(ep)) {
-                        Episode e = new Episode(ep, s);
-                        s.addEpisode(e);
+                    for (String ep : newEpisodes) {
+                        ep = ep.trim();
+                        if (!justSpacesInString(ep)) {
+                            Episode e = new Episode(ep, s);
+                            s.addEpisode(e);
+                        }
                     }
-                }
-                updateSeasons();
-                seasonPanel.revalidate();
-                seasonPanel.repaint();
+                    updateSeasons();
+                    seasonPanel.revalidate();
+                    seasonPanel.repaint();
 
-            } else {
-                JOptionPane.showMessageDialog(NoteFrame.this, "The Season name cannot be empty");
+                } else {
+                    JOptionPane.showMessageDialog(NoteFrame.this, "The Season name cannot be empty");
+                }
             }
         }
     }
