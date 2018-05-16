@@ -236,7 +236,7 @@ public class Note implements Serializable{
 
 
     public List<Tag> searchTags(String searchString, List<Tag> foundSoFar) {
-        searchString = searchString.toString();
+        searchString = searchString.toLowerCase();
         List<Tag> foundTags = new ArrayList<>();
         List<Tag> searchFrom = foundSoFar;
         if (foundSoFar == null) {

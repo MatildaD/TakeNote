@@ -192,6 +192,7 @@ public class NoteFrame extends JFrame {
 
     // Attempts to save the current budget to file based on user input filename
     private void save() {
+        saveNotes();
         int answer = 0;
         if (!note.getLastSavedPath().equals("")) {
             fc.setSelectedFile(new File(note.getLastSavedPath()));
@@ -211,7 +212,7 @@ public class NoteFrame extends JFrame {
                 file = new File(file.toString() + note.getFILEENDING());
             }
 
-            if (file.exists() && !file.isDirectory()) {
+            if (file.exists() && !file.isDirectory() && !file.getAbsolutePath().equals(note.getLastSavedPath())) {
                 String warning = "A file already exists with that name. Do you wish to overwrite it?";
                 String[] b = {"Overwrite", "Cancel"};
                 answer = JOptionPane.showOptionDialog(NoteFrame.this, warning, "File already exists", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, b, b[1]);
@@ -239,7 +240,7 @@ public class NoteFrame extends JFrame {
     // then asks for a filename. If it exists, the budget opens. If not, the user
     // gets a message and the program continues with the current budget.
     private void load() {
-
+        saveNotes();
         String warning = "Do you wish to save your current session before loading a new one?";
         String[] b = {"Yes", "No"};
         int answer = JOptionPane.showOptionDialog(NoteFrame.this, warning, "Save current first?", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, b, b[1]);
