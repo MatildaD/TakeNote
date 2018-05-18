@@ -1,5 +1,7 @@
 package components;
 
+import javafx.scene.Scene;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +11,7 @@ public class Season implements Serializable {
     private List<Episode> episodeList;
     private String name;
     private boolean expands;
+    private List<SceneNote> notes;
 
 
     /* -------------------------------------------------------------------
@@ -19,6 +22,7 @@ public class Season implements Serializable {
         this.episodeList = new ArrayList<>();
         this.name = name;
         this.expands = true;
+        this.notes = new ArrayList<>();
     }
 
     /* -------------------------------------------------------------------
@@ -37,7 +41,9 @@ public class Season implements Serializable {
         return expands;
     }
 
-
+    public List<SceneNote> getNotes() {
+        return notes;
+    }
 
     /* -------------------------------------------------------------------
      * 	Setters
@@ -51,6 +57,9 @@ public class Season implements Serializable {
         this.name = name;
     }
 
+    public void setNotes(List<SceneNote> notes) {
+        this.notes = notes;
+    }
 
     /* -------------------------------------------------------------------
      * 	Manipulate Episode List
@@ -70,6 +79,29 @@ public class Season implements Serializable {
     public void clearEpisodes() {
         episodeList.clear();
     }
+
+
+
+    /* -------------------------------------------------------------------
+     * 	Manipulate Notes List
+     *  ------------------------------------------------------------------*/
+
+
+    public void removeNote(SceneNote note) {
+        if (notes.contains(note)) {
+            notes.remove(note);
+        }
+    }
+
+    public void addNote(SceneNote note) {
+        notes.add(note);
+    }
+
+
+
+    /* -------------------------------------------------------------------
+     * 	Misc
+     *  ------------------------------------------------------------------*/
 
 
     public void flipExpands() {

@@ -1,6 +1,8 @@
 package takenote;
 
+import com.sun.org.apache.xpath.internal.SourceTree;
 import components.*;
+import enums.Selected;
 import javafx.scene.Scene;
 
 import java.io.Serializable;
@@ -13,6 +15,7 @@ public class Note implements Serializable{
     private List<Season> seasons;
     private String name;
     private Episode selectedEpisode;
+    private Season selectedSeason;
     private List<Tag> tagList;
     private String lastSavedPath;
 
@@ -29,6 +32,7 @@ public class Note implements Serializable{
     public Note(String name) {
         this.name = name;
         this.seasons = new ArrayList<>();
+        this.selectedEpisode = null;
         this.selectedEpisode = null;
         this.tagList = new ArrayList<>();
         this.lastSavedPath = "";
@@ -48,6 +52,10 @@ public class Note implements Serializable{
 
     public Episode getSelectedEpisode() {
         return selectedEpisode;
+    }
+
+    public Season getSelectedSeason() {
+        return selectedSeason;
     }
 
     public List<Tag> getTagList() {
@@ -76,6 +84,12 @@ public class Note implements Serializable{
 
     public void setSelectedEpisode(Episode selectedEpisode) {
         this.selectedEpisode = selectedEpisode;
+        this.selectedSeason = null;
+    }
+
+    public void setSelectedSeason(Season selectedSeason) {
+        this.selectedSeason = selectedSeason;
+        this.selectedEpisode = null;
     }
 
     public void setTagList(List<Tag> tagList) {
@@ -134,13 +148,62 @@ public class Note implements Serializable{
         if (selectedEpisode != null) {
             selectedEpisode.removeNote(s);
             selectedEpisode.setActiveSceneNote(null);
-            for (Tag t: s.getTagList()) {
-                if (!multipleOccurrencesOfTag(t) ) {
-                    tagList.remove(t);
-                }
+
+        } else if (selectedSeason != null) {
+            selectedSeason.removeNote(s);
+        }
+        for (Tag t: s.getTagList()) {
+            if (!multipleOccurrencesOfTag(t) ) {
+                tagList.remove(t);
             }
         }
     }
+
+    public List<SceneNote> searchNotes(String searchString, List<SceneNote> foundSoFar) {
+        List<SceneNote> foundNotes = new ArrayList<>();
+        searchString = searchString.toLowerCase();
+
+        System.out.println("found so far = " +foundNotes.toString());
+
+        if (foundSoFar != null) { //If search has already begun
+            System.out.println("Search has already begun (foundSoFar != null)");
+            for (SceneNote note : foundSoFar) {
+                System.out.println("Note= " + note.getNote());
+                if (note.getNote().toLowerCase().contains(searchString)) {
+                    System.out.println("Adding note");
+                    foundNotes.add(note);
+                }
+            }
+        } else {
+
+            System.out.println("found so far = null");
+            for (Season s : seasons) {
+                for (SceneNote note : s.getNotes()) {
+                    System.out.println("for season note " + note.getNote());
+                    if (note.getNote().toLowerCase().contains(searchString)) {
+                        System.out.println("adding note " + note.getNote());
+                        foundNotes.add(note);
+                    }
+                }
+
+                for (Episode e : s.getEpisodeList()) {
+                    for (SceneNote note : e.getNotes()) {
+                        System.out.println("for note " + note.getNote());
+                        if (note.getNote().toLowerCase().contains(searchString)) {
+                            System.out.println("adding note " + note.getNote());
+                            foundNotes.add(note);
+                        }
+
+                    }
+                }
+            }
+
+
+        }
+        return foundNotes;
+    }
+
+
     /* -------------------------------------------------------------------
      * 	Subtitles
      *  ------------------------------------------------------------------*/
@@ -260,5 +323,152 @@ public class Note implements Serializable{
 
     }
 
+    public List<Tag> getSelectedTags() {
+        List<Tag> selectedTags = new ArrayList<>();
 
+        for (Tag t : tagList) {
+            if (t.getSelectedStatus() == Selected.CONTAINS) {
+                selectedTags.add(t);
+            }
+        }
+        return selectedTags;
+    }
+
+    public List<Tag> getNotSelectedTags() {
+        List<Tag> notSelectedTags = new ArrayList<>();
+
+        for (Tag t : tagList) {
+            if (t.getSelectedStatus() == Selected.NOT_CONTAINS) {
+                notSelectedTags.add(t);
+            }
+        }
+        return notSelectedTags;
+
+
+
+    }
+
+
+
+    public List<SceneNote> notesFilteredByTags(boolean searchOnlySelected) {
+        List<SceneNote> foundNotes = new ArrayList<>();
+        List<SceneNote> searchList = new ArrayList<>();
+
+        List<Tag> selectedTags = getSelectedTags();
+        List<Tag> notSelectedTags = getNotSelectedTags();
+
+        if (selectedTags.isEmpty()) {
+            selectedTags = tagList;
+        }
+
+        System.out.println(selectedTags.toString());
+        System.out.println(notSelectedTags.toString());
+
+        System.out.println("OnlySelected = " + searchOnlySelected);
+        if (searchOnlySelected) {
+            if (episodeOrSeasonIsSelected()) {
+                searchList = (selectedEpisode != null) ? selectedEpisode.getNotes() : selectedSeason.getNotes() ;
+            }
+            if (selectedSeason != null) {
+                for (Episode e : selectedSeason.getEpisodeList()) {
+                    for (SceneNote note : e.getNotes()) {
+                        searchList.add(note);
+                    }
+                }
+            }
+        }
+
+
+
+        System.out.println("Search list size = "  + searchList.size() );
+
+        if (!searchList.isEmpty()) {
+            for (SceneNote note : searchList) {
+
+                for (Tag t : selectedTags) {
+                    if (note.hasTag(t)) {
+                        boolean hasNotSelectedTag = false;
+                        for (Tag notT : notSelectedTags) {
+                            if (note.hasTag(notT)) {
+                                hasNotSelectedTag = true;
+                                break;
+                            }
+                        }
+                        if (!hasNotSelectedTag && !foundNotes.contains(note)) {
+                            foundNotes.add(note);
+                        }
+
+                    }
+                }
+
+            }
+        } else {
+            for (Season s : seasons) {
+                for (SceneNote note : s.getNotes()) {
+
+                    for (Tag t : selectedTags) {
+                        if (note.hasTag(t)) {
+                            boolean hasNotSelectedTag = false;
+                            for (Tag notT : notSelectedTags) {
+                                if (note.hasTag(notT)) {
+                                    hasNotSelectedTag = true;
+                                    break;
+                                }
+                            }
+                            if (!hasNotSelectedTag && !foundNotes.contains(note)) {
+                                foundNotes.add(note);
+                            }
+
+                        }
+                    }
+                }
+
+                for (Episode e : s.getEpisodeList()) {
+                    for (SceneNote note : e.getNotes()) {
+
+
+
+                        for (Tag t : selectedTags) {
+                            if (note.hasTag(t)) {
+                                boolean hasNotSelectedTag = false;
+                                for (Tag notT : notSelectedTags) {
+                                    if (note.hasTag(notT)) {
+                                        hasNotSelectedTag = true;
+                                        break;
+                                    }
+                                }
+                                if (!hasNotSelectedTag && !foundNotes.contains(note)) {
+                                    foundNotes.add(note);
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+
+        return foundNotes;
+    }
+
+
+    public boolean episodeOrSeasonIsSelected() {
+        return (selectedSeason != null) || (selectedEpisode != null);
+    }
+
+    public boolean atLeastOneTagIsSelected() {
+        for (Tag t : tagList) {
+            if (t.getSelectedStatus() == Selected.CONTAINS || t.getSelectedStatus() == Selected.NOT_CONTAINS) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public void deselectAllTags() {
+        for (Tag t : tagList) {
+            t.setSelectedStatus(Selected.DESELECTED);
+        }
+    }
 }

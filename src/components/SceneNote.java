@@ -11,6 +11,7 @@ public class SceneNote implements Serializable{
     private String endTime;
     private List<Tag> tagList;
     private SubtitleBit sub;
+    private Episode episode;
 
 
     /* -------------------------------------------------------------------
@@ -32,6 +33,7 @@ public class SceneNote implements Serializable{
         this.endTime = "00:00:00";
         this.tagList = new ArrayList<>();
         this.sub = null;
+        this.episode = null;
 
     }
 
@@ -59,6 +61,10 @@ public class SceneNote implements Serializable{
         return sub;
     }
 
+    public Episode getEpisode() {
+        return episode;
+    }
+
     /* -------------------------------------------------------------------
      * 	Setters
      *  ------------------------------------------------------------------*/
@@ -81,6 +87,10 @@ public class SceneNote implements Serializable{
 
     public void setSub(SubtitleBit sub) {
         this.sub = sub;
+    }
+
+    public void setEpisode(Episode episode) {
+        this.episode = episode;
     }
 
     /* -------------------------------------------------------------------
