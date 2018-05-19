@@ -147,6 +147,8 @@ public class Episode implements Serializable{
     }
 
 
+
+
     /**
      * Open and read a file, and return the lines in the file as a list
      * of Strings.
@@ -154,6 +156,8 @@ public class Episode implements Serializable{
      */
     public void importSubtitles(String filename) {
         String fileEnding = filename.substring(filename.length() - 4);
+
+        int lastEndTime = 0;
 
         if (fileEnding.equals(".txt") || fileEnding.equals(".srt")) {
 
@@ -165,8 +169,8 @@ public class Episode implements Serializable{
                         int number = Integer.parseInt(line);
                         String time = reader.readLine();
                         String[] timeSplit = time.split(" --> ");
-                        String startTime = timeSplit[0].substring(0, 8);
-                        String endTime = timeSplit[1].substring(0, 8);
+                        String startTime = timeSplit[0];
+                        String endTime = timeSplit[1];
                         String lineOne = reader.readLine();
                         String lineTwo = reader.readLine();
                         String lineThree = "";
@@ -174,17 +178,14 @@ public class Episode implements Serializable{
                             lineThree = reader.readLine();
                         }
 
-                    /*
-                    System.out.println("LineOne= " + lineOne + "\n"
-                            + "LineTwo= " + lineTwo + "\n"
-                            + "LineThree= " + lineThree + "\n"
-                            + "StartTime= " + startTime + "\n"
-                            + "EndTime= " + endTime + "\n"
-                            + "Number= " + number + "\n"
-                    );
-                    */
+                        int startT = Integer.parseInt(startTime.substring(0,2) + startTime.substring(3,5) + startTime.substring(6,8) + startTime.substring(9));
+                        int endT = Integer.parseInt(endTime.substring(0,2) + endTime.substring(3,5) + endTime.substring(6,8) + endTime.substring(9));
 
-                        SubtitleBit sub = new SubtitleBit(startTime, endTime, lineOne, lineTwo, lineThree, number);
+                        int timeSinceLast = startT - lastEndTime;
+
+                        lastEndTime = endT;
+
+                        SubtitleBit sub = new SubtitleBit(startTime, endTime, lineOne, lineTwo, lineThree, number, this, timeSinceLast);
                         addSubtitleBit(sub);
 
                     }
@@ -197,7 +198,7 @@ public class Episode implements Serializable{
                 e.printStackTrace();
             }
         } else {
-            JOptionPane.showMessageDialog(null, "TakeNote can currently only open SRT Subtitles, with file endings .txt or .srt");
+            JOptionPane.showMessageDialog(null, "TakeNote can currently only open SubRip Subtitles, with file endings .txt or .srt");
         }
     }
 

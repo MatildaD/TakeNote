@@ -12,6 +12,7 @@ public class SceneNote implements Serializable{
     private List<Tag> tagList;
     private SubtitleBit sub;
     private Episode episode;
+    private Season season;
 
 
     /* -------------------------------------------------------------------
@@ -65,6 +66,10 @@ public class SceneNote implements Serializable{
         return episode;
     }
 
+    public Season getSeason() {
+        return season;
+    }
+
     /* -------------------------------------------------------------------
      * 	Setters
      *  ------------------------------------------------------------------*/
@@ -91,6 +96,12 @@ public class SceneNote implements Serializable{
 
     public void setEpisode(Episode episode) {
         this.episode = episode;
+        this.season = null;
+    }
+
+    public void setSeason(Season season) {
+        this.season = season;
+        this.episode = null;
     }
 
     /* -------------------------------------------------------------------
@@ -112,6 +123,14 @@ public class SceneNote implements Serializable{
     }
 
 
+
+    public boolean hasEpisode() {
+        return episode != null;
+    }
+
+    public boolean hasSeason() {
+        return season != null;
+    }
 
 
     public void removeSub() {

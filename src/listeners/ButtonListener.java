@@ -34,7 +34,11 @@ public class ButtonListener implements ActionListener {
         }  else if (e.getSource().equals(noteFrame.getRemoveSubtitlesButton())) {
             noteFrame.removeSubtitles();
         }  else if (e.getSource().equals(noteFrame.getAddSceneNoteButton())) {
-            noteFrame.newSceneNote(new SubtitleBit("00:00:00", "00:00:00", "", "", "", 0));
+            if (noteFrame.getNote().getSelectedSub() != null) {
+                noteFrame.newSceneNote(noteFrame.getNote().getSelectedSub());
+            } else {
+                noteFrame.newSceneNote(new SubtitleBit("00:00:00", "00:00:00", "", "", "", 0, noteFrame.getNote().getSelectedEpisode(), 0));
+            }
         } else if (e.getSource().equals(noteFrame.getSearchButton())) {
             noteFrame.search();
     }

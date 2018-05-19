@@ -8,39 +8,51 @@ public class SubtitleBit implements Serializable {
     private String lineOne;
     private String lineTwo;
     private String lineThree;
+
     private String startTime;
     private String endTime;
     private int number;
     private Point scrollPos;
+    private Episode episode;
+    private int timeSinceLast;
 
     /* -------------------------------------------------------------------
      * 	Constructor
      *  ------------------------------------------------------------------*/
 
-    public SubtitleBit(String startTime, String endTime, String lineOne, String lineTwo, String lineThree, int number) {
+    public SubtitleBit(String startTime, String endTime, String lineOne, String lineTwo, String lineThree, int number, Episode episode, int timeSinceLast) {
         this.lineOne = lineOne;
         this.lineTwo = lineTwo;
         this.lineThree = lineThree;
+
         this.startTime = startTime;
         this.endTime = endTime;
         this.number = number;
         this.scrollPos = new Point(0, 0);
+        this.episode = episode;
+        this.timeSinceLast = timeSinceLast;
     }
 
     /* -------------------------------------------------------------------
      * 	Getters
      *  ------------------------------------------------------------------*/
 
-    public String getLineOne() {
-        return lineOne;
-    }
-    public String getLineTwo() {
-        return lineTwo;
+    public String getSubtitle() {
+        String sub = "";
+        if (!lineOne.equals("")) {
+            sub += lineOne;
+        }
+
+        if (!lineTwo.equals("")) {
+            sub += "<br>" + lineTwo;
+        }
+
+        if (!lineThree.equals("")) {
+            sub += "<br>" + lineThree;
+        }
+        return sub;
     }
 
-    public String getLineThree() {
-        return lineThree;
-    }
 
     public String getStartTime() {
         return startTime;
@@ -58,21 +70,18 @@ public class SubtitleBit implements Serializable {
         return scrollPos;
     }
 
+    public Episode getEpisode() {
+        return episode;
+    }
+
+    public int getTimeSinceLast() {
+        return timeSinceLast;
+    }
+
     /* -------------------------------------------------------------------
      * 	Setters
      *  ------------------------------------------------------------------*/
 
-    public void setLineOne(String lineOne) {
-        this.lineOne = lineOne;
-    }
-
-    public void setLineTwo(String lineTwo) {
-        this.lineTwo = lineTwo;
-    }
-
-    public void setLineThree(String lineThree) {
-        this.lineThree = lineThree;
-    }
 
     public void setStartTime(String startTime) {
         this.startTime = startTime;
@@ -90,9 +99,17 @@ public class SubtitleBit implements Serializable {
         this.scrollPos = scrollPos;
     }
 
+    public void setEpisode(Episode episode) {
+        this.episode = episode;
+    }
+
+    public void setTimeSinceLast(int timeSinceLast) {
+        this.timeSinceLast = timeSinceLast;
+    }
+
     @Override
     public String toString() {
-        return lineOne + "<br>" + lineTwo + "<br>" + lineThree;
+        return lineOne + " " + lineTwo + " " + lineThree;
 
     }
 }
