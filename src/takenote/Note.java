@@ -318,6 +318,15 @@ public class Note implements Serializable {
      * 	Tags
      *  ------------------------------------------------------------------*/
 
+    public void notAllUnselectedTags() {
+        for (Tag t: tagList) {
+            if (t.getSelectedStatus() == Selected.DESELECTED) {
+                t.setSelectedStatus(Selected.NOT_CONTAINS);
+            }
+        }
+    }
+
+
     public boolean tagExists(String name) {
         for (Tag t: tagList) {
             if (t.getTag().toLowerCase().equals(name.toLowerCase()) || t.hasAlias(name)) {
@@ -541,7 +550,8 @@ public class Note implements Serializable {
 
     public boolean atLeastOneTagIsSelected() {
         for (Tag t : tagList) {
-            if (t.getSelectedStatus() == Selected.CONTAINS || t.getSelectedStatus() == Selected.NOT_CONTAINS) {
+            Selected status = t.getSelectedStatus();
+            if (status == Selected.CONTAINS || status == Selected.NOT_CONTAINS || status == Selected.MUST_CONTAIN) {
                 return true;
             }
         }

@@ -56,8 +56,10 @@ public class Tag implements Serializable {
         if (selectedStatus == Selected.DESELECTED) {
             selectedStatus = Selected.CONTAINS;
         } else if (selectedStatus == Selected.CONTAINS) {
+            selectedStatus = Selected.MUST_CONTAIN;
+        } else if (selectedStatus == Selected.MUST_CONTAIN) {
             selectedStatus = Selected.NOT_CONTAINS;
-        } else if (selectedStatus == Selected.NOT_CONTAINS) {
+        } else  {
             selectedStatus = Selected.DESELECTED;
         }
     }
