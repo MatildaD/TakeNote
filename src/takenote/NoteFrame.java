@@ -26,21 +26,19 @@ import java.util.stream.Collectors;
 
 
 //TODO: Add functionality to set custom Start Time for SceneNote
-
-
 //TODO: Add functionality to add choose/add/remove Color for tags
-//TODO: Add functionality to Select Season and add notes to Season
-//TODO: Add functionality to Search using Tags
 
 
 public class NoteFrame extends JFrame {
 
 
     private Note note;
-
-
     private JFrame window = new JFrame("TakeNote");
 
+
+    /* -------------------------------------------------------------------
+     * 	Main Panels
+     *  ------------------------------------------------------------------*/
 
 
     private JPanel seasonPanel = new JPanel(new MigLayout());
@@ -50,6 +48,11 @@ public class NoteFrame extends JFrame {
     private JPanel tagsPanel = new JPanel(new MigLayout());
     private JPanel topPanel = new JPanel(new MigLayout());
 
+
+    /* -------------------------------------------------------------------
+     * 	Buttons
+     *  ------------------------------------------------------------------*/
+
     private JButton addSeasonButton = new JButton("Add Season");
     private JButton removeSeasonButton = new JButton("Delete Season");
     private JButton addEpisodeButton = new JButton("Add Episode");
@@ -57,22 +60,26 @@ public class NoteFrame extends JFrame {
     private JButton addSceneNoteButton = new JButton("Add Note");
     private JButton addSubtitlesButton = new JButton("Add Subtitles");
     private JButton removeSubtitlesButton = new JButton("Delete Subtitles");
-
     private JButton deselectAllTagsButton = new JButton("Deselect All Tags");
     private JButton notAllUnselectedTagsButton = new JButton("NOT All Unselected Tags");
-
     private JButton searchButton = new JButton("Search");
+
+
 
     private JCheckBox searchOnlySelected = new JCheckBox("Search selected Season/Episode only");
 
-    //Scrolly panels
+    /* -------------------------------------------------------------------
+     * 	Scrollpanels
+     *  ------------------------------------------------------------------*/
     private JScrollPane subtitleScroll;
     private JScrollPane seasonScroll;
     private JScrollPane sceneNoteScroll;
     private JScrollPane tagScroll;
 
 
-    //Subtitles
+    /* -------------------------------------------------------------------
+     * 	File Chooser
+     *  ------------------------------------------------------------------*/
     private JFileChooser fc = new JFileChooser();
 
 
@@ -83,6 +90,10 @@ public class NoteFrame extends JFrame {
     private List<Tag> foundTags;
     private JTextField tagSearchField;
 
+
+    /* -------------------------------------------------------------------
+     * 	Search helpers
+     *  ------------------------------------------------------------------*/
     private JTextField searchField;
 
     private List<SceneNote> foundNotes;
@@ -97,6 +108,10 @@ public class NoteFrame extends JFrame {
     private boolean searchModeEnabled;
 
 
+
+    /* -------------------------------------------------------------------
+     * 	Constructor
+     *  ------------------------------------------------------------------*/
 
     NoteFrame(Note note) {
         this.note = note;
@@ -113,21 +128,15 @@ public class NoteFrame extends JFrame {
         return note;
     }
 
-    private JSplitPane subtitlesAndNotes;
-    private JSplitPane subtitleNotesAndSeasons;
-    private JSplitPane tagsAndNotes;
-
-    private JSplitPane notesAndSub;
-    private JSplitPane tagAndNotesSub;
-    private JSplitPane seasonAndSubNotesTags;
-    private JSplitPane topAndBottom;
 
 
 
-    public JPanel getTagsPanel() {
-        return tagsPanel;
-    }
 
+
+
+    /* -------------------------------------------------------------------
+     * 	Setup
+     *  ------------------------------------------------------------------*/
     private void setupFrame() {
         window.setPreferredSize(Toolkit.getDefaultToolkit().getScreenSize());
         searchModeEnabled = false;
@@ -152,12 +161,10 @@ public class NoteFrame extends JFrame {
         tagScroll = new JScrollPane(tagsPanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
 
-
-
-        notesAndSub = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, subtitleScroll, sceneNoteScroll);
-        tagAndNotesSub = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, notesAndSub, tagScroll);
-        seasonAndSubNotesTags = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, seasonScroll, tagAndNotesSub);
-        topAndBottom = new JSplitPane(JSplitPane.VERTICAL_SPLIT, topPanel, seasonAndSubNotesTags);
+        JSplitPane notesAndSub = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, subtitleScroll, sceneNoteScroll);
+        JSplitPane tagAndNotesSub = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, notesAndSub, tagScroll);
+        JSplitPane seasonAndSubNotesTags = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, seasonScroll, tagAndNotesSub);
+        JSplitPane topAndBottom = new JSplitPane(JSplitPane.VERTICAL_SPLIT, topPanel, seasonAndSubNotesTags);
 
 
 
@@ -205,7 +212,6 @@ public class NoteFrame extends JFrame {
     }
 
 
-
     private void setupShortcuts() {
         window.addKeyListener(new KeyListener() {
             @Override
@@ -226,92 +232,6 @@ public class NoteFrame extends JFrame {
                 System.out.println("Key released! " + e.getKeyCode());
             }
         });
-    }
-
-
-    private void setupSearch() {
-        searchField = new JTextField();
-        TextPrompt textPrompt = new TextPrompt("Search notes:", searchField);
-        textPrompt.setForeground( Color.LIGHT_GRAY );
-        textPrompt.changeStyle(Font.ITALIC);
-        textPrompt.setShow(TextPrompt.Show.FOCUS_LOST);
-
-        searchField.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                search();
-            }
-
-        });
-        searchField.addFocusListener(new FocusListener() {
-            @Override
-            public void focusGained(FocusEvent e) {
-                searchField.setText("");
-            }
-
-            @Override
-            public void focusLost(FocusEvent e) {
-
-            }
-        });
-
-        topPanel.add(searchField, "cell 4 1, width 150, height 27, split 2");
-        topPanel.add(searchButton, "cell 5 1");
-        topPanel.add(searchOnlySelected, "cell 4 0, grow");
-        searchOnlySelected.setMnemonic(KeyEvent.VK_E);
-
-
-        topPanel.add(notAllUnselectedTagsButton, "align right,cell 7 0");
-        topPanel.add(deselectAllTagsButton, "cell 7 0,  split 2");
-
-
-    }
-
-    public void resetSearch() {
-        note.deselectAllTags();
-        searchField.setText("");
-    }
-
-
-    public void search() {
-        if (note.atLeastOneTagIsSelected() || !searchField.getText().equals("")) {
-            enableSearchMode();
-        } else {
-            disableSearchMode();
-            updateAll();
-            return;
-        }
-
-        if (note.atLeastOneTagIsSelected()) {
-            foundNotes = note.notesFilteredByTags(searchOnlySelected.isSelected());
-
-        } else {
-            foundNotes = null;
-        }
-
-        if (!searchField.getText().equals("")) {
-            foundNotes = note.searchNotes(searchField.getText(), foundNotes, searchOnlySelected.isSelected());
-            foundSubs = note.searchSubs(searchField.getText(), searchOnlySelected.isSelected());
-
-        } else if (!note.atLeastOneTagIsSelected()) {
-            foundNotes = null;
-        }
-
-        updateSceneNotes();
-        if (foundSubs == null || foundSubs.isEmpty()) {
-            noSubsFound();
-        } else {
-            updateSubtitles(foundSubs.get(0));
-        }
-        scenePanel.revalidate();
-        scenePanel.repaint();
-    }
-
-    private void noSubsFound() {
-        subtitlePanel.removeAll();
-        subtitlePanel.add(new JLabel("<html><h2> No results found </h2></html>"));
-        subtitlePanel.revalidate();
-        subtitlePanel.repaint();
     }
 
 
@@ -340,9 +260,11 @@ public class NoteFrame extends JFrame {
 
         window.revalidate();
         window.repaint();
-
     }
 
+    /* -------------------------------------------------------------------
+     * 	Save / Load
+     *  ------------------------------------------------------------------*/
 
     private void save() {
         saveNotes();
@@ -371,23 +293,22 @@ public class NoteFrame extends JFrame {
                 answer = JOptionPane.showOptionDialog(NoteFrame.this, warning, "File already exists", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, b, b[1]);
             }
 
-        if (answer == 0) {
-            try (FileOutputStream fileOut = new FileOutputStream(file.getAbsolutePath())) {
-                try (ObjectOutput out = new ObjectOutputStream(fileOut)) {
-                    out.writeObject(note);
-                    out.close();
-                    fileOut.close();
+            if (answer == 0) {
+                try (FileOutputStream fileOut = new FileOutputStream(file.getAbsolutePath())) {
+                    try (ObjectOutput out = new ObjectOutputStream(fileOut)) {
+                        out.writeObject(note);
+                        out.close();
+                        fileOut.close();
 
-                    note.setLastSavedPath(file.getAbsolutePath());
+                        note.setLastSavedPath(file.getAbsolutePath());
+                    }
+                } catch (IOException problem) {
+                    problem.printStackTrace();
                 }
-            } catch (IOException problem) {
-                problem.printStackTrace();
             }
-        }
         }
 
     }
-
 
     private void load() {
         saveNotes();
@@ -429,22 +350,44 @@ public class NoteFrame extends JFrame {
 
     }
 
-    private void disableSearchMode() {
-        searchModeEnabled = false;
+    /* -------------------------------------------------------------------
+     * 	Search Functions
+     *  ------------------------------------------------------------------*/
 
-        if (note.getLastWasEp() && note.getLastSelectedEpisode() != null) {
-            note.setSelectedEpisode(note.getLastSelectedEpisode());
-        } else if (!note.getLastWasEp() && note.getLastSelectedSeason() != null) {
-            note.setSelectedSeason(note.getLastSelectedSeason());
+    public void search() {
+        if (note.atLeastOneTagIsSelected() || !searchField.getText().equals("")) {
+            enableSearchMode();
+        } else {
+            disableSearchMode();
+            updateAll();
+            return;
         }
-        foundNotes = null;
-        foundSubs = null;
-        resetSearch();
-        updateSeasons();
-        seasonPanel.revalidate();
-        seasonPanel.repaint();
 
+        if (note.atLeastOneTagIsSelected()) {
+            foundNotes = note.notesFilteredByTags(searchOnlySelected.isSelected());
+
+        } else {
+            foundNotes = null;
+        }
+
+        if (!searchField.getText().equals("")) {
+            foundNotes = note.searchNotes(searchField.getText(), foundNotes, searchOnlySelected.isSelected());
+            foundSubs = note.searchSubs(searchField.getText(), searchOnlySelected.isSelected());
+
+        } else if (!note.atLeastOneTagIsSelected()) {
+            foundNotes = null;
+        }
+
+        updateSceneNotes();
+        if (foundSubs == null || foundSubs.isEmpty()) {
+            noSubsFound();
+        } else {
+            updateSubtitles(foundSubs.get(0));
+        }
+        scenePanel.revalidate();
+        scenePanel.repaint();
     }
+
 
     private void searchByTag() {
         if (note.atLeastOneTagIsSelected() || !searchField.getText().equals("")) {
@@ -469,9 +412,61 @@ public class NoteFrame extends JFrame {
         updateSceneNotes();
         scenePanel.revalidate();
         scenePanel.repaint();
-
-
     }
+
+    /* -------------------------------------------------------------------
+     * 	Setup Search & Search Helper Functions
+     *  ------------------------------------------------------------------*/
+
+
+    public void resetSearch() {
+        note.deselectAllTags();
+        searchField.setText("");
+    }
+
+    private void noSubsFound() {
+        subtitlePanel.removeAll();
+        subtitlePanel.add(new JLabel("<html><h2> No results found </h2></html>"));
+        subtitlePanel.revalidate();
+        subtitlePanel.repaint();
+    }
+
+    private void setupSearch() {
+        searchField = new JTextField();
+        TextPrompt textPrompt = new TextPrompt("Search notes:", searchField);
+        textPrompt.setForeground( Color.LIGHT_GRAY );
+        textPrompt.changeStyle(Font.ITALIC);
+        textPrompt.setShow(TextPrompt.Show.FOCUS_LOST);
+
+        searchField.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                search();
+            }
+
+        });
+        searchField.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                searchField.setText("");
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+
+            }
+        });
+
+        topPanel.add(searchField, "cell 4 1, width 150, height 27, split 2");
+        topPanel.add(searchButton, "cell 5 1");
+        topPanel.add(searchOnlySelected, "cell 4 0, grow");
+        searchOnlySelected.setMnemonic(KeyEvent.VK_E);
+
+
+        topPanel.add(notAllUnselectedTagsButton, "align right,cell 7 0");
+        topPanel.add(deselectAllTagsButton, "cell 7 0,  split 2");
+    }
+
 
 
     private void setupTagSearch() {
@@ -522,12 +517,49 @@ public class NoteFrame extends JFrame {
                 tagsPanel.repaint();
             }
         });
-
-
         topPanel.add(tagSearchField, "cell 7 1, push, aligny baseline, align right, width 150, height 25");
     }
 
+    private void enableSearchMode() {
+        searchModeEnabled = true;
+        if (!searchOnlySelected.isSelected()) {
+            boolean lastWasEp = (note.getLastWasEp()) ? true : false;
+            if (lastWasEp && note.getSelectedEpisode() != null) {
+                note.setLastSelectedEpisode(note.getSelectedEpisode());
+            } else if (note.getSelectedSeason() != null){
+                note.setLastSelectedSeason(note.getSelectedSeason());
+            }
+            note.setSelectedEpisode(null);
+            note.setSelectedSeason(null);
+            note.setLastWasEp(lastWasEp);
+            updateSeasons();
+            seasonPanel.revalidate();
+            seasonPanel.repaint();
+        }
+    }
 
+
+    private void disableSearchMode() {
+        searchModeEnabled = false;
+
+        if (note.getLastWasEp() && note.getLastSelectedEpisode() != null) {
+            note.setSelectedEpisode(note.getLastSelectedEpisode());
+        } else if (!note.getLastWasEp() && note.getLastSelectedSeason() != null) {
+            note.setSelectedSeason(note.getLastSelectedSeason());
+        }
+        foundNotes = null;
+        foundSubs = null;
+        resetSearch();
+        updateSeasons();
+        seasonPanel.revalidate();
+        seasonPanel.repaint();
+    }
+
+
+
+    /* -------------------------------------------------------------------
+     * 	Update Seasons
+     *  ------------------------------------------------------------------*/
 
 
     private void updateSeasons() {
@@ -551,6 +583,8 @@ public class NoteFrame extends JFrame {
                         season.flipExpands();
                         foundNotes = null;
                         foundSubs = null;
+                        activeNote = null;
+                        activeSub = null;
                         updateSubtitles(null);
                         updateSeasons();
                         subtitlePanel.revalidate();
@@ -575,10 +609,12 @@ public class NoteFrame extends JFrame {
                     if (e.getClickCount() == 2) {
                         editSeason(season);
                     }
-
-
                     disableSearchMode();
                     note.setSelectedSeason(season);
+                    foundNotes = null;
+                    foundSubs = null;
+                    activeNote = null;
+                    activeSub = null;
                     updateAll();
 
                 }
@@ -616,6 +652,10 @@ public class NoteFrame extends JFrame {
                             }
                             disableSearchMode();
                             note.setSelectedEpisode(episode);
+                            foundNotes = null;
+                            foundSubs = null;
+                            activeNote = null;
+                            activeSub = null;
                             updateAll();
 
                             if (event.getClickCount() == 2) {
@@ -635,9 +675,7 @@ public class NoteFrame extends JFrame {
                         ep.setBackground(Color.LIGHT_GRAY);
                         ep.setOpaque(true);
                     }
-
                 }
-
             }
         }
         window.revalidate();
@@ -645,103 +683,9 @@ public class NoteFrame extends JFrame {
     }
 
 
-    private boolean justSpacesInString(String text) {
-        if (text.equals("")) { return true; }
-
-        for (char c: text.toCharArray()) {
-            if (c != ' ') {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private void editEpisode(Episode e) {
-        JTextField episodeName = new JTextField(e.getName());
-        JComboBox<Season> season = new JComboBox<>();
-        note.getSeasons().forEach(season::addItem);
-        season.setEditable(false);
-        season.setSelectedItem(e.getSeason());
-
-        JPanel inputs = createInputs(episodeName, season, true);
-        String[] buttons = { "Save", "Delete Episode", "Cancel" };
-
-        int ans = JOptionPane.showOptionDialog(NoteFrame.this, inputs, "Edit Episode", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, buttons, buttons[0]);
-
-
-        if (ans == 1) {
-            String warning = "WARNING: Removing an Episode will remove all its SceneNotes, Subtitles and Tags. Do you wish to delete the Episode?";
-            String[] b = {"Yes", "No"};
-            int a = JOptionPane.showOptionDialog(NoteFrame.this, warning, "WARNING!", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, b, b[1]);
-            if (a == 0) {
-                note.removeEpisode(e);
-                updateAll();
-            }
-
-        } else if (ans == 0) {
-            String newName = episodeName.getText().trim();
-            if (!justSpacesInString(newName)) {
-                e.setEpisodeName(newName);
-                Season newSeason = (Season) season.getSelectedItem();
-                if (!e.getSeason().equals(newSeason)) {
-                    e.getSeason().getEpisodeList().remove(e);
-                    e.setSeason(newSeason);
-                    newSeason.addEpisode(e);
-                }
-
-            } else {
-                System.out.println("Name cannot only contains spaces");
-            }
-            updateAll();
-        }
-    }
-
-
-    private void editSeason(Season s) {
-        JPanel inputs = new JPanel(new MigLayout());
-        JTextField seasonName = new JTextField(s.getName());
-        JTextField episodeName = new JTextField();
-        inputs.add(new JLabel("Season name:"), "wrap");
-        inputs.add(seasonName, "grow, pushx, wrap");
-        inputs.add(new JLabel("Add episodes (separated by commas)"), "wrap");
-        inputs.add(episodeName, "grow, pushx, wrap");
-
-        String[] buttons = { "Save", "Delete Season", "Cancel" };
-
-        int ans = JOptionPane.showOptionDialog(NoteFrame.this, inputs, "Edit Season", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, buttons, buttons[0]);
-
-        if (ans == 1) {
-            String warning = "WARNING: Removing a Season will remove all its Episodes, including their SceneNotes, Subtitles and Tags. Do you wish to delete the Season?";
-            String[] b = {"Yes", "No"};
-            int a = JOptionPane.showOptionDialog(NoteFrame.this, warning, "WARNING!", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, b, b[1]);
-            if (a == 0) {
-                s.clearEpisodes();
-                note.getSeasons().remove(s);
-                updateAll();
-            }
-
-        } else if (ans == 0) {
-            String newName = seasonName.getText().trim();
-            if (!justSpacesInString(newName)) {
-                s.setName(newName);
-            }
-            String[] newEpisodes = episodeName.getText().split(",");
-
-            for (String ep : newEpisodes) {
-                ep = ep.trim();
-                if (!justSpacesInString(ep)) {
-                    Episode e = new Episode(ep, s);
-                    s.addEpisode(e);
-                }
-            }
-            updateSeasons();
-            seasonPanel.revalidate();
-            seasonPanel.repaint();
-        }
-    }
-
-
+    /* -------------------------------------------------------------------
+     * 	Update All
+     *  ------------------------------------------------------------------*/
 
     public void updateAll() {
         updateSubtitles(new SubtitleBit("00:00:00", "00:00:00", "", "", "", 0, note.getLastSelectedEpisode(), 0));
@@ -754,14 +698,9 @@ public class NoteFrame extends JFrame {
     }
 
 
-    private void saveNotes() {
-        for (JTextArea a: activeNotesList) {
-            SceneNote s = (SceneNote) a.getClientProperty("getScene");
-            s.setNote(a.getText());
-        }
-        activeNotesList.clear();
-    }
-
+    /* -------------------------------------------------------------------
+     * 	Update Subtitles & Helper Functions
+     *  ------------------------------------------------------------------*/
 
 
     private void updateSubtitles(SubtitleBit b) {
@@ -784,6 +723,7 @@ public class NoteFrame extends JFrame {
         List<SubtitleBit> subtitlesToDraw = new ArrayList<>();
         if (searchModeEnabled) {
             subtitlesToDraw = foundSubs;
+
         }  else if (note.getSelectedEpisode() != null) {
             subtitlesToDraw = note.getSelectedEpisode().getSubtitles();
         }
@@ -823,7 +763,7 @@ public class NoteFrame extends JFrame {
                     if (e.getClickCount() == 2 && !searchModeEnabled) {
                         saveNotes();
                         bit.setScrollPos(subtitleScroll.getViewport().getViewPosition());
-                        if (activeSub != l) {
+                        if (activeSub != l && l != null) {
                             repaintSub(l);
                         }
                         newSceneNote(bit);
@@ -887,22 +827,19 @@ public class NoteFrame extends JFrame {
         }
     }
 
-    private void enableSearchMode() {
-        searchModeEnabled = true;
-        if (!searchOnlySelected.isSelected()) {
-            boolean lastWasEp = (note.getLastWasEp()) ? true : false;
-            if (lastWasEp && note.getSelectedEpisode() != null) {
-                note.setLastSelectedEpisode(note.getSelectedEpisode());
-            } else if (note.getSelectedSeason() != null){
-                note.setLastSelectedSeason(note.getSelectedSeason());
-            }
-            note.setSelectedEpisode(null);
-            note.setSelectedSeason(null);
-            note.setLastWasEp(lastWasEp);
-            updateSeasons();
-            seasonPanel.revalidate();
-            seasonPanel.repaint();
+
+    public void setCorrectSubtitleScrollHeight() {
+        if (activeSub == null) {
+            subtitleScroll.getViewport().setViewPosition(new Point(0, 0));
+            return;}
+        int newY = Math.min(subtitlePanel.getHeight(), activeSub.getBounds().y+subtitleScroll.getHeight()/2);
+        if (activeSub.getY() > subtitleScroll.getHeight()/2) {
+            activeSub.setBounds(activeSub.getBounds().x, newY, activeSub.getBounds().width, activeSub.getBounds().height);
+        } else {
+            activeSub.setBounds(activeSub.getBounds().x, 0, activeSub.getBounds().width, activeSub.getBounds().height);
         }
+        subtitleScroll.getViewport().setViewPosition(new Point(0, 0));
+        subtitlePanel.scrollRectToVisible(activeSub.getBounds());
     }
 
     private void repaintSub(JLabel label) {
@@ -919,137 +856,76 @@ public class NoteFrame extends JFrame {
     }
 
 
+    /* -------------------------------------------------------------------
+     * 	Update/Edit Tags
+     *  ------------------------------------------------------------------*/
 
-    public void setCorrectSubtitleScrollHeight() {
-        if (activeSub == null) { return;}
-        int newY = Math.min(subtitlePanel.getHeight(), activeSub.getBounds().y+subtitleScroll.getHeight()/2);
-        if (activeSub.getY() > subtitleScroll.getHeight()/2) {
-            activeSub.setBounds(activeSub.getBounds().x, newY, activeSub.getBounds().width, activeSub.getBounds().height);
-        } else {
-            activeSub.setBounds(activeSub.getBounds().x, 0, activeSub.getBounds().width, activeSub.getBounds().height);
+
+    public void updateTags() {
+        tagsPanel.removeAll();
+        List<Tag> tagsToDraw = (foundTags != null) ? foundTags : note.getTagList();
+
+        for (Tag t: tagsToDraw) {
+            JLabel l = new JLabel(t.getTag());
+
+            tagsPanel.add(l, "wrap");
+
+            if (t.getSelectedStatus() == Selected.CONTAINS) {
+                l.setOpaque(true);
+                l.setBackground(Color.lightGray);
+            } else if (t.getSelectedStatus() == Selected.NOT_CONTAINS) {
+                l.setOpaque(true);
+                l.setBackground(Color.red);
+            }
+
+
+
+            l.putClientProperty("getTag", t);
+
+            l.addMouseListener(new MouseListener() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    JLabel label = (JLabel) e.getSource();
+                    Tag tag = (Tag) label.getClientProperty("getTag");
+                    if (e.getClickCount() == 1 && SwingUtilities.isMiddleMouseButton(e)) {//Open menu (middle click)
+                        editTag(tag);
+                        updateSceneNotes();
+                        scenePanel.revalidate();
+                        scenePanel.repaint();
+                    } else if ( SwingUtilities.isRightMouseButton(e)) {  //Deselect (right click)
+                        tag.setSelectedStatus(Selected.DESELECTED);
+                        label.setOpaque(false);
+                        label.revalidate();
+                        label.repaint();
+                        searchByTag();
+
+                    } else if (SwingUtilities.isLeftMouseButton(e)) {//Rotate selection (left click)
+                        tag.rotateSelected();
+                        label.setOpaque(true);
+                        label.revalidate();
+                        label.repaint();
+                        Selected status = tag.getSelectedStatus();
+                        if (status == Selected.CONTAINS) {
+                            label.setBackground(Color.lightGray);
+                        } else if (status == Selected.NOT_CONTAINS) {
+                            label.setBackground(Color.red);
+                        } else if (status == Selected.DESELECTED) {
+                            label.setOpaque(false);
+                        } else if (status == Selected.MUST_CONTAIN) {
+                            label.setBackground(Color.decode("#478dff"));
+                        }
+                        label.revalidate();
+                        label.repaint();
+                        searchByTag();
+
+                    }
+                }
+                @Override                public void mousePressed(MouseEvent e) {               }
+                @Override                public void mouseReleased(MouseEvent e) {                }
+                @Override                public void mouseEntered(MouseEvent e) {                }
+                @Override                public void mouseExited(MouseEvent e) {                }
+            });
         }
-        subtitleScroll.getViewport().setViewPosition(new Point(0, 0));
-        subtitlePanel.scrollRectToVisible(activeSub.getBounds());
-
-    }
-
-    public void setCorrectNoteScrollHeight() {
-        scenePanel.validate();
-        JPanel notePanel = activeNotes.get(activeNote);
-
-        if (notePanel == null) {
-            sceneNoteScroll.getViewport().setViewPosition(new Point(0, 0));
-            return;
-        }
-
-
-        int yPos;
-        int centerY = notePanel.getBounds().y + (notePanel.getBounds().height/2 );
-        int notePanelHeight = scenePanel.getHeight();
-        int halfScrollPanelHeight = sceneNoteScroll.getHeight() / 2;
-
-        System.out.println("Y: " + notePanel.getBounds().y + " height/2: " + notePanel.getBounds().height/2 + " total CenterY: " + centerY);
-        System.out.println("Notepanel height " + scenePanel.getHeight() + "Half height " + sceneNoteScroll.getHeight() / 2);
-
-        if (centerY < halfScrollPanelHeight) {
-
-            yPos = 0;
-            System.out.println(centerY + " < " + halfScrollPanelHeight + "  y= " + yPos);
-            //notePanel.setBounds(notePanel.getBounds().x, 0, notePanel.getBounds().width, notePanel.getBounds().height);
-        } else if (centerY > notePanelHeight - halfScrollPanelHeight) {
-
-            yPos = scenePanel.getHeight();
-            System.out.println(centerY + " > " + (notePanelHeight- halfScrollPanelHeight) + "  y= " + yPos);
-            //notePanel.setBounds(notePanel.getBounds().x, notePanelHeight, notePanel.getBounds().width, notePanel.getBounds().height);
-        } else {
-            yPos = centerY + halfScrollPanelHeight;
-            System.out.println( "ELSE  y= " + yPos);
-
-            //notePanel.setBounds(notePanel.getBounds().x, centerY + halfScrollPanelHeight, notePanel.getBounds().width, notePanel.getBounds().height);
-        }
-
-
-
-
-        //scenePanel.validate();
-
-        notePanel.setBounds(notePanel.getBounds().x, yPos, notePanel.getBounds().width, notePanel.getBounds().height);
-        JTextArea textArea = (JTextArea) notePanel.getComponent(3);
-        textArea.requestFocus();
-        textArea.setCaretPosition(textArea.getDocument().getLength());
-
-        sceneNoteScroll.getViewport().setViewPosition(new Point(0, 0));
-        //System.out.println("Point after setting " + sceneNoteScroll.getViewport().getViewPosition());
-        scenePanel.scrollRectToVisible(notePanel.getBounds());
-
-        //scenePanel.revalidate();
-        //scenePanel.repaint();
-
-        System.out.println("Point after revalidate/repaint " + sceneNoteScroll.getViewport().getViewPosition());
-    }
-
-    public void unColorNote(SceneNote note) {
-        if (note == activeNote) { activeNote = null; }
-        if (!activeNotes.containsKey(note)) { return; }
-        JPanel notePanel = activeNotes.get(note);
-        notePanel.setBackground(Color.decode("#d8d8d8"));
-        notePanel.getComponent(0).setBackground(Color.decode("#d8d8d8"));
-        notePanel.getComponent(0).revalidate();
-        notePanel.getComponent(0).repaint();
-        notePanel.revalidate();
-        notePanel.repaint();
-    }
-
-    public void colorNote(SceneNote note) {
-        if (!activeNotes.containsKey(note)) { return; }
-
-        JPanel notePanel = activeNotes.get(note);
-        notePanel.setBackground(Color.lightGray);
-        notePanel.getComponent(0).setBackground(Color.lightGray);
-        notePanel.getComponent(0).revalidate();
-        notePanel.getComponent(0).repaint();
-        notePanel.revalidate();
-        notePanel.repaint();
-
-        activeNote = note;
-
-
-    }
-
-
-    public void newSceneNote(SubtitleBit bit) {
-        if (searchModeEnabled) { return; }
-
-        SceneNote sn = new SceneNote("", bit);
-        boolean isEpisode = false;
-        if (note.getSelectedEpisode() != null) {
-            isEpisode = true;
-            sn.setEpisode(note.getSelectedEpisode());
-        } else if (note.getSelectedSeason() != null) {
-            isEpisode = false;
-            sn.setSeason(note.getSelectedSeason());
-        }
-
-        List<SceneNote> notesList = (isEpisode ) ? note.getSelectedEpisode().getNotes() : note.getSelectedSeason().getNotes();
-        notesList.add(sn);
-
-
-        //Sort list of notes based on starting time, aka chronological order compared to the subtitles
-        Collections.sort(notesList, (object1, object2) -> object1.getStartTime().compareTo(object2.getStartTime()));
-
-        if (isEpisode) {
-            note.getSelectedEpisode().setNotes(notesList);
-        } else {
-            note.getSelectedSeason().setNotes(notesList);
-        }
-
-        updateSceneNotes();
-        if (activeNote != null) {
-            unColorNote(activeNote);
-        }
-        colorNote(sn);
-        SwingUtilities.invokeLater(() -> setCorrectNoteScrollHeight());
-
     }
 
 
@@ -1146,117 +1022,9 @@ public class NoteFrame extends JFrame {
         }
     }
 
-
-    public void updateTags() {
-        tagsPanel.removeAll();
-        List<Tag> tagsToDraw = (foundTags != null) ? foundTags : note.getTagList();
-
-        for (Tag t: tagsToDraw) {
-            JLabel l = new JLabel(t.getTag());
-
-            tagsPanel.add(l, "wrap");
-
-            if (t.getSelectedStatus() == Selected.CONTAINS) {
-                l.setOpaque(true);
-                l.setBackground(Color.lightGray);
-            } else if (t.getSelectedStatus() == Selected.NOT_CONTAINS) {
-                l.setOpaque(true);
-                l.setBackground(Color.red);
-            }
-
-
-
-            l.putClientProperty("getTag", t);
-
-            l.addMouseListener(new MouseListener() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    JLabel label = (JLabel) e.getSource();
-                    Tag tag = (Tag) label.getClientProperty("getTag");
-                    if (e.getClickCount() == 1 && SwingUtilities.isMiddleMouseButton(e)) {//Open menu (middle click)
-
-                        editTag(tag);
-                        updateAll();
-                    } else if ( SwingUtilities.isRightMouseButton(e)) {  //Deselect (right click)
-                        tag.setSelectedStatus(Selected.DESELECTED);
-                        label.setOpaque(false);
-                        label.revalidate();
-                        label.repaint();
-                        searchByTag();
-
-                    } else if (SwingUtilities.isLeftMouseButton(e)) {//Rotate selection (left click)
-                        tag.rotateSelected();
-                        label.setOpaque(true);
-                        label.revalidate();
-                        label.repaint();
-                        Selected status = tag.getSelectedStatus();
-                        if (status == Selected.CONTAINS) {
-                            label.setBackground(Color.lightGray);
-                        } else if (status == Selected.NOT_CONTAINS) {
-                            label.setBackground(Color.red);
-                        } else if (status == Selected.DESELECTED) {
-                            label.setOpaque(false);
-                        } else if (status == Selected.MUST_CONTAIN) {
-                            label.setBackground(Color.decode("#478dff"));
-                        }
-                        label.revalidate();
-                        label.repaint();
-                        searchByTag();
-
-                    }
-                }
-                @Override                public void mousePressed(MouseEvent e) {               }
-                @Override                public void mouseReleased(MouseEvent e) {                }
-                @Override                public void mouseEntered(MouseEvent e) {                }
-                @Override                public void mouseExited(MouseEvent e) {                }
-            });
-        }
-
-
-    }
-
-    private void updateLocalTagPanel(JPanel tagP, SceneNote sceneNote) {
-        tagP.removeAll();
-        for (Tag t: sceneNote.getTagList()) {
-            JLabel l = new JLabel(t.toString());
-            l.putClientProperty("getScene", sceneNote);
-            l.putClientProperty("getTag", t);
-            l.addMouseListener(new MouseListener() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    JLabel tagLabel = (JLabel) e.getSource();
-                    JPanel tagPanel = (JPanel) tagLabel.getParent();
-                    Tag tag = (Tag) tagLabel.getClientProperty("getTag");
-                    SceneNote scene = (SceneNote) tagLabel.getClientProperty("getScene");
-                    String message = "Do you wish to remove this tag from this SceneNote?";
-                    String[] removeTagButtons = {"Remove", "Cancel"};
-                    int removeTagAns = JOptionPane.showOptionDialog(NoteFrame.this, message, "Remove Tag!", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, removeTagButtons, removeTagButtons[1]);
-
-                    if (removeTagAns == 0) {
-                        scene.removeTag(tag);
-                        if (!note.multipleOccurrencesOfTag(tag)) {
-                            note.removeTag(tag);
-                        }
-                    }
-                    updateLocalTagPanel(tagPanel, scene);
-                    updateTags();
-                    tagsPanel.revalidate();
-                    tagsPanel.repaint();
-                }
-                @Override                public void mousePressed(MouseEvent e) {                }
-                @Override                public void mouseReleased(MouseEvent e) {                }
-                @Override                public void mouseEntered(MouseEvent e) {                }
-                @Override                public void mouseExited(MouseEvent e) {                }
-            });
-
-            tagP.add(l, "gapright 10");
-        }
-        tagP.revalidate();
-        tagP.repaint();
-    }
-
-
-
+    /* -------------------------------------------------------------------
+     * 	Update Notes
+     *  ------------------------------------------------------------------*/
 
     private void updateSceneNotes() {
         scenePanel.removeAll();
@@ -1458,7 +1226,7 @@ public class NoteFrame extends JFrame {
                         note.getSelectedEpisode().setActiveSceneNote(sn);
                         note.setSelectedSub(sn.getSub());
 
-                        if (!sn.getSub().getSubtitle().equals("") && activeSub != null) {
+                        if (!sn.getSub().getSubtitle().equals("") && activeSubtitleBits.get(sn.getSub()) != null) {
                             repaintSub(activeSubtitleBits.get(sn.getSub()));
                             setCorrectSubtitleScrollHeight();
                             subtitlePanel.revalidate();
@@ -1496,6 +1264,7 @@ public class NoteFrame extends JFrame {
                         } else if (sceneNote.getSeason() != null) {
                             note.setSelectedSeason(sceneNote.getSeason());
                         }
+                        deselectAllTags();
                         updateSubtitles(subtitleBit);
                         updateSceneNotes();
                         updateSeasons();
@@ -1505,7 +1274,6 @@ public class NoteFrame extends JFrame {
                         subtitlePanel.repaint();
                         seasonPanel.revalidate();
                         seasonPanel.repaint();
-
                     }
                 }
                 @Override                public void mousePressed(MouseEvent e) {                }
@@ -1514,29 +1282,183 @@ public class NoteFrame extends JFrame {
                 @Override                public void mouseExited(MouseEvent e) {                }
             });
 
-
-
             //Adding order matters! Make sure tagPanel is added first, see tagInput action listener!
             panel.add(tagPanel, "cell 1 1, grow, pushx, pushy, spany, width 100:300:650");
             panel.add(tagInputField, "cell 1 0, width 50:200:200, height 23:23:23, aligny top");
             panel.add(deleteSceneNotePanel, "cell 3 0, align right, aligny top");
             panel.add(textArea, "cell 0 0, spany, grow, width 100:500:700");
 
-
-
             updateLocalTagPanel(tagPanel, s);
-
             scenePanel.add(panel, "grow, pushx, wrap");
+        }
+    }
 
+    /* -------------------------------------------------------------------
+     * 	Update Note Helper Functions
+     *  ------------------------------------------------------------------*/
 
+    private void updateLocalTagPanel(JPanel tagP, SceneNote sceneNote) {
+        tagP.removeAll();
+        for (Tag t: sceneNote.getTagList()) {
+            JLabel l = new JLabel(t.toString());
+            l.putClientProperty("getScene", sceneNote);
+            l.putClientProperty("getTag", t);
+            l.addMouseListener(new MouseListener() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    JLabel tagLabel = (JLabel) e.getSource();
+                    JPanel tagPanel = (JPanel) tagLabel.getParent();
+                    Tag tag = (Tag) tagLabel.getClientProperty("getTag");
+                    SceneNote scene = (SceneNote) tagLabel.getClientProperty("getScene");
+                    String message = "Do you wish to remove this tag from this SceneNote?";
+                    String[] removeTagButtons = {"Remove", "Cancel"};
+                    int removeTagAns = JOptionPane.showOptionDialog(NoteFrame.this, message, "Remove Tag!", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, removeTagButtons, removeTagButtons[1]);
+
+                    if (removeTagAns == 0) {
+                        scene.removeTag(tag);
+                        if (!note.multipleOccurrencesOfTag(tag)) {
+                            note.removeTag(tag);
+                        }
+                    }
+                    updateLocalTagPanel(tagPanel, scene);
+                    updateTags();
+                    tagsPanel.revalidate();
+                    tagsPanel.repaint();
+                }
+                @Override                public void mousePressed(MouseEvent e) {                }
+                @Override                public void mouseReleased(MouseEvent e) {                }
+                @Override                public void mouseEntered(MouseEvent e) {                }
+                @Override                public void mouseExited(MouseEvent e) {                }
+            });
+
+            tagP.add(l, "gapright 10");
+        }
+        tagP.revalidate();
+        tagP.repaint();
+    }
+
+    public void newSceneNote(SubtitleBit bit) {
+        if (searchModeEnabled) { return; }
+
+        SceneNote sn = new SceneNote("", bit);
+        boolean isEpisode = false;
+        if (note.getSelectedEpisode() != null) {
+            isEpisode = true;
+            sn.setEpisode(note.getSelectedEpisode());
+            if (bit !=null) {
+                bit.setEpisode(note.getSelectedEpisode());
+            }
+        } else if (note.getSelectedSeason() != null) {
+            isEpisode = false;
+            sn.setSeason(note.getSelectedSeason());
+            bit.setEpisode(null);
         }
 
+        List<SceneNote> notesList = (isEpisode ) ? note.getSelectedEpisode().getNotes() : note.getSelectedSeason().getNotes();
+        notesList.add(sn);
 
+
+        //Sort list of notes based on starting time, aka chronological order compared to the subtitles
+        Collections.sort(notesList, (object1, object2) -> object1.getStartTime().compareTo(object2.getStartTime()));
+
+        if (isEpisode) {
+            note.getSelectedEpisode().setNotes(notesList);
+        } else {
+            note.getSelectedSeason().setNotes(notesList);
+        }
+
+        updateSceneNotes();
+        if (activeNote != null) {
+            unColorNote(activeNote);
+        }
+        colorNote(sn);
+        SwingUtilities.invokeLater(() -> setCorrectNoteScrollHeight());
 
     }
 
+    public void setCorrectNoteScrollHeight() {
+        scenePanel.validate();
+        JPanel notePanel = activeNotes.get(activeNote);
 
-    // Creates (and adds to budget) a main category based on user input
+        if (notePanel == null) {
+            sceneNoteScroll.getViewport().setViewPosition(new Point(0, 0));
+            return;
+        }
+
+
+        int yPos;
+        int centerY = notePanel.getBounds().y + (notePanel.getBounds().height/2 );
+        int notePanelHeight = scenePanel.getHeight();
+        int halfScrollPanelHeight = sceneNoteScroll.getHeight() / 2;
+
+        System.out.println("Y: " + notePanel.getBounds().y + " height/2: " + notePanel.getBounds().height/2 + " total CenterY: " + centerY);
+        System.out.println("Notepanel height " + scenePanel.getHeight() + "Half height " + sceneNoteScroll.getHeight() / 2);
+
+        if (centerY < halfScrollPanelHeight) {
+
+            yPos = 0;
+            System.out.println(centerY + " < " + halfScrollPanelHeight + "  y= " + yPos);
+            //notePanel.setBounds(notePanel.getBounds().x, 0, notePanel.getBounds().width, notePanel.getBounds().height);
+        } else if (centerY > notePanelHeight - halfScrollPanelHeight) {
+
+            yPos = scenePanel.getHeight();
+            System.out.println(centerY + " > " + (notePanelHeight- halfScrollPanelHeight) + "  y= " + yPos);
+            //notePanel.setBounds(notePanel.getBounds().x, notePanelHeight, notePanel.getBounds().width, notePanel.getBounds().height);
+        } else {
+            yPos = centerY + halfScrollPanelHeight;
+            System.out.println( "ELSE  y= " + yPos);
+
+            //notePanel.setBounds(notePanel.getBounds().x, centerY + halfScrollPanelHeight, notePanel.getBounds().width, notePanel.getBounds().height);
+        }
+        //scenePanel.validate();
+
+        notePanel.setBounds(notePanel.getBounds().x, yPos, notePanel.getBounds().width, notePanel.getBounds().height);
+        JTextArea textArea = (JTextArea) notePanel.getComponent(3);
+        textArea.requestFocus();
+        textArea.setCaretPosition(textArea.getDocument().getLength());
+
+        sceneNoteScroll.getViewport().setViewPosition(new Point(0, 0));
+        //System.out.println("Point after setting " + sceneNoteScroll.getViewport().getViewPosition());
+        scenePanel.scrollRectToVisible(notePanel.getBounds());
+
+        //scenePanel.revalidate();
+        //scenePanel.repaint();
+
+        System.out.println("Point after revalidate/repaint " + sceneNoteScroll.getViewport().getViewPosition());
+    }
+
+    public void unColorNote(SceneNote note) {
+        if (note == activeNote) { activeNote = null; }
+        if (!activeNotes.containsKey(note)) { return; }
+        JPanel notePanel = activeNotes.get(note);
+        notePanel.setBackground(Color.decode("#d8d8d8"));
+        notePanel.getComponent(0).setBackground(Color.decode("#d8d8d8"));
+        notePanel.getComponent(0).revalidate();
+        notePanel.getComponent(0).repaint();
+        notePanel.revalidate();
+        notePanel.repaint();
+    }
+
+    public void colorNote(SceneNote note) {
+        if (!activeNotes.containsKey(note)) { return; }
+
+        JPanel notePanel = activeNotes.get(note);
+        notePanel.setBackground(Color.lightGray);
+        notePanel.getComponent(0).setBackground(Color.lightGray);
+        notePanel.getComponent(0).revalidate();
+        notePanel.getComponent(0).repaint();
+        notePanel.revalidate();
+        notePanel.repaint();
+
+        activeNote = note;
+    }
+
+
+
+    /* -------------------------------------------------------------------
+     * 	Add/Remove/Edit Season
+     *  ------------------------------------------------------------------*/
+
     public void addSeason() {
         JPanel inputs = new JPanel(new MigLayout());
         JTextField seasonName = new JTextField();
@@ -1578,7 +1500,7 @@ public class NoteFrame extends JFrame {
         }
     }
 
-    // Removes a main category, and all of its sub categories
+
     public void removeSeason() {
         if (note.getSeasons().isEmpty()) { return; }
 
@@ -1602,22 +1524,58 @@ public class NoteFrame extends JFrame {
                 updateAll();
             }
         }
-
     }
 
 
+    private void editSeason(Season s) {
+        JPanel inputs = new JPanel(new MigLayout());
+        JTextField seasonName = new JTextField(s.getName());
+        JTextField episodeName = new JTextField();
+        inputs.add(new JLabel("Season name:"), "wrap");
+        inputs.add(seasonName, "grow, pushx, wrap");
+        inputs.add(new JLabel("Add episodes (separated by commas)"), "wrap");
+        inputs.add(episodeName, "grow, pushx, wrap");
 
+        String[] buttons = { "Save", "Delete Season", "Cancel" };
 
+        int ans = JOptionPane.showOptionDialog(NoteFrame.this, inputs, "Edit Season", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, buttons, buttons[0]);
 
-    // Informs the user that there can't exist a sub category without a main for it to belong to
-    private void noEpispdeWithoutSeason() {
-        JOptionPane.showMessageDialog(window, "You need to create a Season first", "No Episode Without Season",
-                JOptionPane.INFORMATION_MESSAGE);
+        if (ans == 1) {
+            String warning = "WARNING: Removing a Season will remove all its Episodes, including their SceneNotes, Subtitles and Tags. Do you wish to delete the Season?";
+            String[] b = {"Yes", "No"};
+            int a = JOptionPane.showOptionDialog(NoteFrame.this, warning, "WARNING!", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, b, b[1]);
+            if (a == 0) {
+                s.clearEpisodes();
+                note.getSeasons().remove(s);
+                updateAll();
+            }
+
+        } else if (ans == 0) {
+            String newName = seasonName.getText().trim();
+            if (!justSpacesInString(newName)) {
+                s.setName(newName);
+            }
+            String[] newEpisodes = episodeName.getText().split(",");
+
+            for (String ep : newEpisodes) {
+                ep = ep.trim();
+                if (!justSpacesInString(ep)) {
+                    Episode e = new Episode(ep, s);
+                    s.addEpisode(e);
+                }
+            }
+            updateSeasons();
+            seasonPanel.revalidate();
+            seasonPanel.repaint();
+        }
     }
 
 
+    /* -------------------------------------------------------------------
+     * 	Add/Remove/Edit Episode
+     *  ------------------------------------------------------------------*/
 
-    // Creates (and adds to budget) a sub category based on user input
+
     public void addEpisode() {
         if (note.getSeasons().isEmpty()) {
             noEpispdeWithoutSeason();
@@ -1650,8 +1608,6 @@ public class NoteFrame extends JFrame {
     }
 
 
-    // Removes a sub category of a users choise, and also removes all transactions
-    // that are associated with that sub category
     public void removeEpisode() {
         if (note.getSeasons().isEmpty()) { return; }
         if (note.getSelectedEpisode() != null) {
@@ -1692,8 +1648,52 @@ public class NoteFrame extends JFrame {
                 }
             }
         }
-
     }
+
+
+    private void editEpisode(Episode e) {
+        JTextField episodeName = new JTextField(e.getName());
+        JComboBox<Season> season = new JComboBox<>();
+        note.getSeasons().forEach(season::addItem);
+        season.setEditable(false);
+        season.setSelectedItem(e.getSeason());
+
+        JPanel inputs = createInputs(episodeName, season, true);
+        String[] buttons = { "Save", "Delete Episode", "Cancel" };
+
+        int ans = JOptionPane.showOptionDialog(NoteFrame.this, inputs, "Edit Episode", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, buttons, buttons[0]);
+
+
+        if (ans == 1) {
+            String warning = "WARNING: Removing an Episode will remove all its SceneNotes, Subtitles and Tags. Do you wish to delete the Episode?";
+            String[] b = {"Yes", "No"};
+            int a = JOptionPane.showOptionDialog(NoteFrame.this, warning, "WARNING!", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, b, b[1]);
+            if (a == 0) {
+                note.removeEpisode(e);
+                updateAll();
+            }
+
+        } else if (ans == 0) {
+            String newName = episodeName.getText().trim();
+            if (!justSpacesInString(newName)) {
+                e.setEpisodeName(newName);
+                Season newSeason = (Season) season.getSelectedItem();
+                if (!e.getSeason().equals(newSeason)) {
+                    e.getSeason().getEpisodeList().remove(e);
+                    e.setSeason(newSeason);
+                    newSeason.addEpisode(e);
+                }
+
+            } else {
+                System.out.println("Name cannot only contains spaces");
+            }
+            updateAll();
+        }
+    }
+
+    /* -------------------------------------------------------------------
+     * 	Helper Function Episodes/Seasons
+     *  ------------------------------------------------------------------*/
 
 
     // Creates and adds all components to the inputs panel used for creating and editing main and sub categories
@@ -1710,6 +1710,15 @@ public class NoteFrame extends JFrame {
         return inputs;
     }
 
+    private void noEpispdeWithoutSeason() {
+        JOptionPane.showMessageDialog(window, "You need to create a Season first", "No Episode Without Season",
+                JOptionPane.INFORMATION_MESSAGE);
+    }
+
+
+    /* -------------------------------------------------------------------
+     * 	Open/Remove Subtitles
+     *  ------------------------------------------------------------------*/
 
 
     public void openSubtitles() {
@@ -1766,6 +1775,9 @@ public class NoteFrame extends JFrame {
         }
     }
 
+    /* -------------------------------------------------------------------
+     * 	Selecting Tags
+     *  ------------------------------------------------------------------*/
 
     public void deselectAllTags() {
         note.deselectAllTags();
@@ -1784,6 +1796,36 @@ public class NoteFrame extends JFrame {
 
     }
 
+    /* -------------------------------------------------------------------
+     * 	Helper Function Misc
+     *  ------------------------------------------------------------------*/
+
+    private boolean justSpacesInString(String text) {
+        if (text.equals("")) { return true; }
+
+        for (char c: text.toCharArray()) {
+            if (c != ' ') {
+                return false;
+            }
+        }
+
+        return true;
+    }
+    private void saveNotes() {
+        for (JTextArea a: activeNotesList) {
+            SceneNote s = (SceneNote) a.getClientProperty("getScene");
+            s.setNote(a.getText());
+        }
+        activeNotesList.clear();
+    }
+
+
+
+
+
+    /* -------------------------------------------------------------------
+     * 	Button Fetchers
+     *  ------------------------------------------------------------------*/
 
 
     public JButton getAddSeasonButton() {return addSeasonButton;}

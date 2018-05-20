@@ -427,7 +427,7 @@ public class Note implements Serializable {
         List<Tag> selectedTags = new ArrayList<>();
 
         for (Tag t : tagList) {
-            if (t.getSelectedStatus() == Selected.CONTAINS) {
+            if (t.getSelectedStatus() == Selected.CONTAINS || t.getSelectedStatus() == Selected.MUST_CONTAIN) {
                 selectedTags.add(t);
             }
         }
