@@ -423,7 +423,7 @@ public class Note implements Serializable {
 
     }
 
-    public List<Tag> getSelectedTags() {
+    public List<Tag> getContainSelectedTags() {
         List<Tag> selectedTags = new ArrayList<>();
 
         for (Tag t : tagList) {
@@ -434,7 +434,7 @@ public class Note implements Serializable {
         return selectedTags;
     }
 
-    public List<Tag> getNotSelectedTags() {
+    public List<Tag> getNotContainSelectedTags() {
         List<Tag> notSelectedTags = new ArrayList<>();
 
         for (Tag t : tagList) {
@@ -443,9 +443,18 @@ public class Note implements Serializable {
             }
         }
         return notSelectedTags;
+    }
 
+    public List<Tag> getMustContainSelectedTags() {
+        List<Tag> mustSelectedTags = new ArrayList<>();
 
+        for (Tag t: tagList) {
+            if (t.getSelectedStatus() == Selected.MUST_CONTAIN) {
+                mustSelectedTags.add(t);
+            }
+        }
 
+        return mustSelectedTags;
     }
 
 
@@ -454,11 +463,12 @@ public class Note implements Serializable {
         List<SceneNote> foundNotes = new ArrayList<>();
         List<SceneNote> searchList = new ArrayList<>();
 
-        List<Tag> selectedTags = getSelectedTags();
-        List<Tag> notSelectedTags = getNotSelectedTags();
+        List<Tag> containSelectedTags = getContainSelectedTags();
+        List<Tag> notContainSelectedTags = getNotContainSelectedTags();
+        List<Tag> mustContainSelectedTags = getMustContainSelectedTags();
 
-        if (selectedTags.isEmpty()) {
-            selectedTags = tagList;
+        if (containSelectedTags.isEmpty()) {
+            containSelectedTags = tagList;
         }
 
         if (searchOnlySelected) {
@@ -472,21 +482,40 @@ public class Note implements Serializable {
                     }
                 }
             }
+        } else {
+            for (Season s : seasons) {
+                for (SceneNote note : s.getNotes()) {
+                    searchList.add(note);
+                }
+
+                for (Episode e : s.getEpisodeList()) {
+                    for (SceneNote note : e.getNotes()) {
+                        searchList.add(note);
+                    }
+                }
+            }
         }
 
         if (!searchList.isEmpty()) {
             for (SceneNote note : searchList) {
-
-                for (Tag t : selectedTags) {
+                for (Tag t : containSelectedTags) {
                     if (note.hasTag(t)) {
                         boolean hasNotSelectedTag = false;
-                        for (Tag notT : notSelectedTags) {
+                        for (Tag notT : notContainSelectedTags) {
                             if (note.hasTag(notT)) {
                                 hasNotSelectedTag = true;
                                 break;
                             }
                         }
-                        if (!hasNotSelectedTag && !foundNotes.contains(note)) {
+                        boolean hasAllMustSelectedTags = true;
+                        for (Tag mustT : mustContainSelectedTags) {
+                            if (!note.hasTag(mustT)) {
+                                hasAllMustSelectedTags = false;
+                                break;
+                            }
+                        }
+
+                        if (!hasNotSelectedTag && !foundNotes.contains(note) && hasAllMustSelectedTags) {
                             foundNotes.add(note);
                         }
 
@@ -494,50 +523,7 @@ public class Note implements Serializable {
                 }
 
             }
-        } else {
-            for (Season s : seasons) {
-                for (SceneNote note : s.getNotes()) {
 
-                    for (Tag t : selectedTags) {
-                        if (note.hasTag(t)) {
-                            boolean hasNotSelectedTag = false;
-                            for (Tag notT : notSelectedTags) {
-                                if (note.hasTag(notT)) {
-                                    hasNotSelectedTag = true;
-                                    break;
-                                }
-                            }
-                            if (!hasNotSelectedTag && !foundNotes.contains(note)) {
-                                foundNotes.add(note);
-                            }
-
-                        }
-                    }
-                }
-
-                for (Episode e : s.getEpisodeList()) {
-                    for (SceneNote note : e.getNotes()) {
-
-
-
-                        for (Tag t : selectedTags) {
-                            if (note.hasTag(t)) {
-                                boolean hasNotSelectedTag = false;
-                                for (Tag notT : notSelectedTags) {
-                                    if (note.hasTag(notT)) {
-                                        hasNotSelectedTag = true;
-                                        break;
-                                    }
-                                }
-                                if (!hasNotSelectedTag && !foundNotes.contains(note)) {
-                                    foundNotes.add(note);
-                                }
-                            }
-                        }
-
-                    }
-                }
-            }
         }
 
         return foundNotes;
