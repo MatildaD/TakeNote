@@ -105,7 +105,7 @@ public class NoteFrame extends JFrame {
     private Map<SubtitleBit, JLabel> activeSubtitleBits;
     private Map<SceneNote, JPanel> activeNotes;
 
-    private boolean searchModeEnabled;
+    private boolean searchModeEnabled = true;
 
 
 
@@ -119,18 +119,12 @@ public class NoteFrame extends JFrame {
         window.setExtendedState(JFrame.MAXIMIZED_BOTH);
         window.setVisible(true);
         window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-
         setupFrame();
-
     }
 
     public Note getNote() {
         return note;
     }
-
-
-
-
 
 
 
@@ -359,7 +353,6 @@ public class NoteFrame extends JFrame {
             enableSearchMode();
         } else {
             disableSearchMode();
-            updateAll();
             return;
         }
 
@@ -384,8 +377,6 @@ public class NoteFrame extends JFrame {
         } else {
             updateSubtitles(foundSubs.get(0));
         }
-        scenePanel.revalidate();
-        scenePanel.repaint();
     }
 
 
@@ -394,7 +385,6 @@ public class NoteFrame extends JFrame {
             enableSearchMode();
         } else {
             disableSearchMode();
-            updateAll();
             return;
         }
         if (!searchField.getText().equals("")) {
@@ -408,10 +398,7 @@ public class NoteFrame extends JFrame {
         } else {
             foundNotes = null;
         }
-
         updateSceneNotes();
-        scenePanel.revalidate();
-        scenePanel.repaint();
     }
 
     /* -------------------------------------------------------------------
@@ -489,14 +476,15 @@ public class NoteFrame extends JFrame {
                 JTextField tagField = (JTextField) e.getSource();
 
                 if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
-
                     foundTags = null;
+                }
+
+                if (e.getKeyCode() == KeyEvent.VK_DOWN && foundTags.size() == 1) {
+                    foundTags.get(0).rotateSelected();
                 }
 
                 foundTags = note.searchTags(tagField.getText(), foundTags);
                 updateTags();
-                tagsPanel.revalidate();
-                tagsPanel.repaint();
             }
         });
 
@@ -513,8 +501,6 @@ public class NoteFrame extends JFrame {
                 }
                 foundTags = null;
                 updateTags();
-                tagsPanel.revalidate();
-                tagsPanel.repaint();
             }
         });
         topPanel.add(tagSearchField, "cell 7 1, push, aligny baseline, align right, width 150, height 25");
@@ -522,37 +508,18 @@ public class NoteFrame extends JFrame {
 
     private void enableSearchMode() {
         searchModeEnabled = true;
-        if (!searchOnlySelected.isSelected()) {
-            boolean lastWasEp = (note.getLastWasEp()) ? true : false;
-            if (lastWasEp && note.getSelectedEpisode() != null) {
-                note.setLastSelectedEpisode(note.getSelectedEpisode());
-            } else if (note.getSelectedSeason() != null){
-                note.setLastSelectedSeason(note.getSelectedSeason());
-            }
-            note.setSelectedEpisode(null);
-            note.setSelectedSeason(null);
-            note.setLastWasEp(lastWasEp);
-            updateSeasons();
-            seasonPanel.revalidate();
-            seasonPanel.repaint();
-        }
     }
 
 
     private void disableSearchMode() {
         searchModeEnabled = false;
-
-        if (note.getLastWasEp() && note.getLastSelectedEpisode() != null) {
-            note.setSelectedEpisode(note.getLastSelectedEpisode());
-        } else if (!note.getLastWasEp() && note.getLastSelectedSeason() != null) {
-            note.setSelectedSeason(note.getLastSelectedSeason());
-        }
+        note.deselectAllTags();
         foundNotes = null;
         foundSubs = null;
+        activeNote = null;
+        activeSub = null;
         resetSearch();
-        updateSeasons();
-        seasonPanel.revalidate();
-        seasonPanel.repaint();
+        updateAll();
     }
 
 
@@ -581,16 +548,7 @@ public class NoteFrame extends JFrame {
                     Season season = (Season) label.getClientProperty("getSe");
                     if (SwingUtilities.isLeftMouseButton(e)) {
                         season.flipExpands();
-                        foundNotes = null;
-                        foundSubs = null;
-                        activeNote = null;
-                        activeSub = null;
-                        updateSubtitles(null);
-                        updateSeasons();
-                        subtitlePanel.revalidate();
-                        subtitlePanel.repaint();
-                        seasonPanel.revalidate();
-                        seasonPanel.repaint();
+                        disableSearchMode();
                     }
                 }
                 @Override                public void mousePressed(MouseEvent e) {                }
@@ -609,13 +567,8 @@ public class NoteFrame extends JFrame {
                     if (e.getClickCount() == 2) {
                         editSeason(season);
                     }
-                    disableSearchMode();
                     note.setSelectedSeason(season);
-                    foundNotes = null;
-                    foundSubs = null;
-                    activeNote = null;
-                    activeSub = null;
-                    updateAll();
+                    disableSearchMode();
 
                 }
                 @Override                public void mousePressed(MouseEvent e) {}
@@ -625,7 +578,7 @@ public class NoteFrame extends JFrame {
 
             });
 
-            if(s.equals(note.getSelectedSeason())) {
+            if(s.equals(note.getSelectedSeason()) && !searchModeEnabled) {
                 se.setBackground(Color.LIGHT_GRAY);
                 se.setOpaque(true);
             }
@@ -650,13 +603,9 @@ public class NoteFrame extends JFrame {
                                 Point p2 = sceneNoteScroll.getViewport().getViewPosition();
                                 note.getSelectedEpisode().setSceneNoteScrollPos(p2);
                             }
-                            disableSearchMode();
+
                             note.setSelectedEpisode(episode);
-                            foundNotes = null;
-                            foundSubs = null;
-                            activeNote = null;
-                            activeSub = null;
-                            updateAll();
+                            disableSearchMode();
 
                             if (event.getClickCount() == 2) {
                                 editEpisode(episode);
@@ -671,15 +620,15 @@ public class NoteFrame extends JFrame {
 
                     seasonPanel.add(ep, "gapleft 25px, pushx, wrap");
 
-                    if(e.equals(note.getSelectedEpisode())) {
+                    if(e.equals(note.getSelectedEpisode()) && !searchModeEnabled) {
                         ep.setBackground(Color.LIGHT_GRAY);
                         ep.setOpaque(true);
                     }
                 }
             }
         }
-        window.revalidate();
-        window.repaint();
+        seasonPanel.revalidate();
+        seasonPanel.repaint();
     }
 
 
@@ -705,7 +654,7 @@ public class NoteFrame extends JFrame {
 
     private void updateSubtitles(SubtitleBit b) {
         subtitlePanel.removeAll();
-        //if (note.getSelectedEpisode() == null || note.getSelectedEpisode().getSubtitles().isEmpty()) {return;}
+
         if (note.getSelectedSeason() != null && !searchModeEnabled) { return;}
 
         Episode lastEpisode = null;
@@ -769,31 +718,12 @@ public class NoteFrame extends JFrame {
                         newSceneNote(bit);
 
                     } else if (e.getClickCount() == 2 && searchModeEnabled) {
-                        searchModeEnabled = false;
-                        resetSearch();
                         saveNotes();
                         note.setSelectedEpisode(bit.getEpisode());
+                        disableSearchMode();
                         updateSubtitles(bit);
-                        updateSceneNotes();
-                        updateSeasons();
-                        scenePanel.revalidate();
-                        scenePanel.repaint();
-                        subtitlePanel.revalidate();
-                        subtitlePanel.repaint();
-                        seasonPanel.revalidate();
-                        seasonPanel.repaint();
-
-
+                        
                     }
-                    /*else {
-                        note.setSelectedSub(bit);
-                        bit.setScrollPos(subtitleScroll.getViewport().getViewPosition());
-                        updateSubtitles(bit);
-                        l.scrollRectToVisible(l.getBounds());
-                        subtitlePanel.revalidate();
-                        subtitlePanel.repaint();
-                    }
-*/
                 }
                 @Override                public void mousePressed(MouseEvent e) {                }
                 @Override                public void mouseReleased(MouseEvent e) {                }
@@ -825,13 +755,18 @@ public class NoteFrame extends JFrame {
         } else if (note.getSelectedEpisode() != null) {
             subtitleScroll.getViewport().setViewPosition(note.getSelectedEpisode().getSubtitleScrollPos());
         }
+        subtitlePanel.revalidate();
+        subtitlePanel.repaint();
     }
 
 
     public void setCorrectSubtitleScrollHeight() {
         if (activeSub == null) {
             subtitleScroll.getViewport().setViewPosition(new Point(0, 0));
-            return;}
+            subtitlePanel.revalidate();
+            subtitlePanel.repaint();
+            return;
+        }
         int newY = Math.min(subtitlePanel.getHeight(), activeSub.getBounds().y+subtitleScroll.getHeight()/2);
         if (activeSub.getY() > subtitleScroll.getHeight()/2) {
             activeSub.setBounds(activeSub.getBounds().x, newY, activeSub.getBounds().width, activeSub.getBounds().height);
@@ -840,6 +775,8 @@ public class NoteFrame extends JFrame {
         }
         subtitleScroll.getViewport().setViewPosition(new Point(0, 0));
         subtitlePanel.scrollRectToVisible(activeSub.getBounds());
+        subtitlePanel.revalidate();
+        subtitlePanel.repaint();
     }
 
     private void repaintSub(JLabel label) {
@@ -876,9 +813,10 @@ public class NoteFrame extends JFrame {
             } else if (t.getSelectedStatus() == Selected.NOT_CONTAINS) {
                 l.setOpaque(true);
                 l.setBackground(Color.red);
+            } else if (t.getSelectedStatus() == Selected.MUST_CONTAIN) {
+                l.setOpaque(true);
+                l.setBackground(Color.decode("#478dff"));;
             }
-
-
 
             l.putClientProperty("getTag", t);
 
@@ -890,8 +828,6 @@ public class NoteFrame extends JFrame {
                     if (e.getClickCount() == 1 && SwingUtilities.isMiddleMouseButton(e)) {//Open menu (middle click)
                         editTag(tag);
                         updateSceneNotes();
-                        scenePanel.revalidate();
-                        scenePanel.repaint();
                     } else if ( SwingUtilities.isRightMouseButton(e)) {  //Deselect (right click)
                         tag.setSelectedStatus(Selected.DESELECTED);
                         label.setOpaque(false);
@@ -902,8 +838,6 @@ public class NoteFrame extends JFrame {
                     } else if (SwingUtilities.isLeftMouseButton(e)) {//Rotate selection (left click)
                         tag.rotateSelected();
                         label.setOpaque(true);
-                        label.revalidate();
-                        label.repaint();
                         Selected status = tag.getSelectedStatus();
                         if (status == Selected.CONTAINS) {
                             label.setBackground(Color.lightGray);
@@ -926,8 +860,9 @@ public class NoteFrame extends JFrame {
                 @Override                public void mouseExited(MouseEvent e) {                }
             });
         }
+        tagsPanel.revalidate();
+        tagsPanel.repaint();
     }
-
 
 
     private void editTag(Tag t) {
@@ -968,7 +903,6 @@ public class NoteFrame extends JFrame {
                     t.setTag(newName);
                 }
             }
-
             String[] aliases = alias.getText().split(",");
 
             for (String al : aliases) {
@@ -981,10 +915,6 @@ public class NoteFrame extends JFrame {
             }
             updateTags();
             updateSceneNotes();
-            scenePanel.revalidate();
-            scenePanel.repaint();
-            tagsPanel.revalidate();
-            tagsPanel.repaint();
 
         } else if (ans == 2) {
             //Remove alias
@@ -1033,7 +963,7 @@ public class NoteFrame extends JFrame {
         } else if (!searchModeEnabled && note.getSelectedSeason() != null) {
             scenePanel.add(new JLabel("<html><h1> Notes and Tags for " + note.getSelectedSeason().getName() + "</h1></html>"), "wrap");
         } else if (searchModeEnabled && (foundNotes != null || !foundNotes.isEmpty())) {
-            scenePanel.add(new JLabel("<html><h1> Search results </h1></html>"), "wrap");
+            scenePanel.add(new JLabel("<html><h1> Search results: " + foundNotes.size() + " results found </h1></html>"), "wrap");
         } else if (searchModeEnabled && (foundNotes == null || foundNotes.isEmpty())) {
             scenePanel.add(new JLabel("<html><h1> No results found </h1></html>"), "wrap");
         } else {
@@ -1070,7 +1000,6 @@ public class NoteFrame extends JFrame {
                         JLabel headline = new JLabel("<html><h2>"  + s.getEpisode().getSeason().getName() + "</h2></html>");
                         scenePanel.add(headline, "wrap");
                     }
-
 
                     if (lastEpisode != (s.getEpisode())) {
                         lastEpisode = s.getEpisode();
@@ -1109,10 +1038,8 @@ public class NoteFrame extends JFrame {
 
                         if (!sn.getSub().getSubtitle().equals("") && activeSub != null) {
                             repaintSub(activeSubtitleBits.get(sn.getSub()));
-
                             setCorrectSubtitleScrollHeight();
-                            subtitlePanel.revalidate();
-                            subtitlePanel.repaint();
+
                         }
                     }
                     colorNote(sn);
@@ -1154,8 +1081,6 @@ public class NoteFrame extends JFrame {
                     }
                 }
                 updateTags();
-                tagsPanel.revalidate();
-                tagsPanel.repaint();
                 updateLocalTagPanel(tagP, scene);
             });
 
@@ -1229,8 +1154,7 @@ public class NoteFrame extends JFrame {
                         if (!sn.getSub().getSubtitle().equals("") && activeSubtitleBits.get(sn.getSub()) != null) {
                             repaintSub(activeSubtitleBits.get(sn.getSub()));
                             setCorrectSubtitleScrollHeight();
-                            subtitlePanel.revalidate();
-                            subtitlePanel.repaint();
+
                         }
                     }
                     colorNote(sn);
@@ -1251,29 +1175,21 @@ public class NoteFrame extends JFrame {
 
             panel.putClientProperty("getScene", s);
             panel.addMouseListener(new MouseListener() {
-                @Override                public void mouseClicked(MouseEvent e) {
+                @Override
+                public void mouseClicked(MouseEvent e) {
                     if (e.getClickCount() == 2 && searchModeEnabled) {
                         JPanel p = (JPanel) e.getSource();
                         SceneNote sceneNote = (SceneNote) p.getClientProperty("getScene");
-                        SubtitleBit subtitleBit = sceneNote.getSub();
-                        searchModeEnabled = false;
-                        resetSearch();
                         saveNotes();
+
                         if (sceneNote.getEpisode() != null) {
                             note.setSelectedEpisode(sceneNote.getEpisode());
                         } else if (sceneNote.getSeason() != null) {
                             note.setSelectedSeason(sceneNote.getSeason());
                         }
-                        deselectAllTags();
-                        updateSubtitles(subtitleBit);
-                        updateSceneNotes();
-                        updateSeasons();
+                        disableSearchMode();
                         colorNote(sceneNote);
                         SwingUtilities.invokeLater(() -> setCorrectNoteScrollHeight());
-                        subtitlePanel.revalidate();
-                        subtitlePanel.repaint();
-                        seasonPanel.revalidate();
-                        seasonPanel.repaint();
                     }
                 }
                 @Override                public void mousePressed(MouseEvent e) {                }
@@ -1291,6 +1207,11 @@ public class NoteFrame extends JFrame {
             updateLocalTagPanel(tagPanel, s);
             scenePanel.add(panel, "grow, pushx, wrap");
         }
+
+        scenePanel.revalidate();
+        scenePanel.repaint();
+
+
     }
 
     /* -------------------------------------------------------------------
@@ -1322,8 +1243,6 @@ public class NoteFrame extends JFrame {
                     }
                     updateLocalTagPanel(tagPanel, scene);
                     updateTags();
-                    tagsPanel.revalidate();
-                    tagsPanel.repaint();
                 }
                 @Override                public void mousePressed(MouseEvent e) {                }
                 @Override                public void mouseReleased(MouseEvent e) {                }
@@ -1373,7 +1292,6 @@ public class NoteFrame extends JFrame {
         }
         colorNote(sn);
         SwingUtilities.invokeLater(() -> setCorrectNoteScrollHeight());
-
     }
 
     public void setCorrectNoteScrollHeight() {
@@ -1385,7 +1303,6 @@ public class NoteFrame extends JFrame {
             return;
         }
 
-
         int yPos;
         int centerY = notePanel.getBounds().y + (notePanel.getBounds().height/2 );
         int notePanelHeight = scenePanel.getHeight();
@@ -1395,22 +1312,12 @@ public class NoteFrame extends JFrame {
         System.out.println("Notepanel height " + scenePanel.getHeight() + "Half height " + sceneNoteScroll.getHeight() / 2);
 
         if (centerY < halfScrollPanelHeight) {
-
             yPos = 0;
-            System.out.println(centerY + " < " + halfScrollPanelHeight + "  y= " + yPos);
-            //notePanel.setBounds(notePanel.getBounds().x, 0, notePanel.getBounds().width, notePanel.getBounds().height);
         } else if (centerY > notePanelHeight - halfScrollPanelHeight) {
-
             yPos = scenePanel.getHeight();
-            System.out.println(centerY + " > " + (notePanelHeight- halfScrollPanelHeight) + "  y= " + yPos);
-            //notePanel.setBounds(notePanel.getBounds().x, notePanelHeight, notePanel.getBounds().width, notePanel.getBounds().height);
         } else {
             yPos = centerY + halfScrollPanelHeight;
-            System.out.println( "ELSE  y= " + yPos);
-
-            //notePanel.setBounds(notePanel.getBounds().x, centerY + halfScrollPanelHeight, notePanel.getBounds().width, notePanel.getBounds().height);
         }
-        //scenePanel.validate();
 
         notePanel.setBounds(notePanel.getBounds().x, yPos, notePanel.getBounds().width, notePanel.getBounds().height);
         JTextArea textArea = (JTextArea) notePanel.getComponent(3);
@@ -1418,13 +1325,10 @@ public class NoteFrame extends JFrame {
         textArea.setCaretPosition(textArea.getDocument().getLength());
 
         sceneNoteScroll.getViewport().setViewPosition(new Point(0, 0));
-        //System.out.println("Point after setting " + sceneNoteScroll.getViewport().getViewPosition());
+
         scenePanel.scrollRectToVisible(notePanel.getBounds());
 
-        //scenePanel.revalidate();
-        //scenePanel.repaint();
 
-        System.out.println("Point after revalidate/repaint " + sceneNoteScroll.getViewport().getViewPosition());
     }
 
     public void unColorNote(SceneNote note) {
@@ -1490,8 +1394,6 @@ public class NoteFrame extends JFrame {
                         }
                     }
                     updateSeasons();
-                    seasonPanel.revalidate();
-                    seasonPanel.repaint();
 
                 } else {
                     JOptionPane.showMessageDialog(NoteFrame.this, "The Season name cannot be empty");
@@ -1565,8 +1467,6 @@ public class NoteFrame extends JFrame {
                 }
             }
             updateSeasons();
-            seasonPanel.revalidate();
-            seasonPanel.repaint();
         }
     }
 
@@ -1744,8 +1644,6 @@ public class NoteFrame extends JFrame {
                     note.getSelectedEpisode().importSubtitles(file.getAbsolutePath());
                     saveNotes();
                     updateSubtitles(null);
-                    subtitlePanel.revalidate();
-                    subtitlePanel.repaint();
                 }
             }
 
@@ -1769,8 +1667,6 @@ public class NoteFrame extends JFrame {
             note.removeSubtitles();
             saveNotes();
             updateSubtitles(null);
-            subtitlePanel.revalidate();
-            subtitlePanel.repaint();
 
         }
     }
@@ -1782,14 +1678,11 @@ public class NoteFrame extends JFrame {
     public void deselectAllTags() {
         note.deselectAllTags();
         disableSearchMode();
-        updateAll();
     }
 
     public void notAllUnselectedTags() {
         note.notAllUnselectedTags();
         updateTags();
-        tagsPanel.revalidate();
-        tagsPanel.repaint();
         enableSearchMode();
         searchByTag();
 

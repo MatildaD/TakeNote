@@ -243,7 +243,6 @@ public class Note implements Serializable {
                 }
             }
         } else {
-
             for (Season s : seasons) {
                 for (SceneNote note : s.getNotes()) {
                     if (note.getNote().toLowerCase().contains(searchString)) {
@@ -278,7 +277,6 @@ public class Note implements Serializable {
                     s.removeSub();
                 }
             }
-
             selectedEpisode.clearSubtitles();
         }
     }
@@ -332,9 +330,7 @@ public class Note implements Serializable {
             if (t.getTag().toLowerCase().equals(name.toLowerCase()) || t.hasAlias(name)) {
                 return true;
             }
-
         }
-
         return false;
     }
 
@@ -343,7 +339,6 @@ public class Note implements Serializable {
             if (t.getTag().toLowerCase().equals(name.toLowerCase()) || t.hasAlias(name)) {
                 return t;
             }
-
         }
         return null;
     }
@@ -361,7 +356,6 @@ public class Note implements Serializable {
                 allTagNames.add(a + " (" + t.getTag() + ")");
             }
         }
-
         return allTagNames;
     }
 
@@ -370,6 +364,12 @@ public class Note implements Serializable {
         if (tagList.contains(tag)) {
             tagList.remove(tag);
             for (Season season: seasons) {
+                for (SceneNote note : season.getNotes()) {
+                    if (note.hasTag(tag)) {
+                        note.removeTag(tag);
+                    }
+                }
+
                 for (Episode episode: season.getEpisodeList()) {
                     for (SceneNote s: episode.getNotes()) {
                         if (s.hasTag(tag)) {
@@ -397,7 +397,6 @@ public class Note implements Serializable {
     }
 
 
-
     public List<Tag> searchTags(String searchString, List<Tag> foundSoFar) {
         searchString = searchString.toLowerCase();
         List<Tag> foundTags = new ArrayList<>();
@@ -420,7 +419,6 @@ public class Note implements Serializable {
             }
         }
         return foundTags;
-
     }
 
     public List<Tag> getContainSelectedTags() {
@@ -453,10 +451,8 @@ public class Note implements Serializable {
                 mustSelectedTags.add(t);
             }
         }
-
         return mustSelectedTags;
     }
-
 
 
     public List<SceneNote> notesFilteredByTags(boolean searchOnlySelected) {
@@ -525,7 +521,6 @@ public class Note implements Serializable {
             }
 
         }
-
         return foundNotes;
     }
 
@@ -541,7 +536,6 @@ public class Note implements Serializable {
                 return true;
             }
         }
-
         return false;
     }
 
