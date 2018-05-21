@@ -207,25 +207,27 @@ public class NoteFrame extends JFrame {
 
 
     private void setupShortcuts() {
-        window.addKeyListener(new KeyListener() {
-            @Override
-            public void keyTyped(KeyEvent e) {
-                System.out.println("Key typed! " + e.getKeyCode());
-            }
 
-            @Override
-            public void keyPressed(KeyEvent e) {
-                System.out.println("Key pressed! " + e.getKeyCode());
-                if (e.getKeyCode() == KeyEvent.VK_T && e.isControlDown())  {
-                    tagSearchField.requestFocus();
-                }
+        Action focusTagSearch = new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                tagSearchField.requestFocus();
             }
+        };
+        tagSearchField.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_T, InputEvent.CTRL_DOWN_MASK),
+                "focusTagSearch");
+        tagSearchField.getActionMap().put("focusTagSearch", focusTagSearch);
 
-            @Override
-            public void keyReleased(KeyEvent e) {
-                System.out.println("Key released! " + e.getKeyCode());
+
+        Action focusSearchField = new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                searchField.requestFocus();
             }
-        });
+        };
+        searchField.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.CTRL_DOWN_MASK),
+                "focusSearchField");
+        searchField.getActionMap().put("focusSearchField", focusSearchField);
+
+
     }
 
 
@@ -637,7 +639,7 @@ public class NoteFrame extends JFrame {
      *  ------------------------------------------------------------------*/
 
     public void updateAll() {
-        updateSubtitles(new SubtitleBit("00:00:00", "00:00:00", "", "", "", 0, note.getLastSelectedEpisode(), 0));
+        updateSubtitles(new SubtitleBit("00:00:00", "00:00:00", "", "", "", 0, note.getSelectedEpisode(), 0));
         updateSeasons();
         updateSceneNotes();
         updateTags();
@@ -722,7 +724,7 @@ public class NoteFrame extends JFrame {
                         note.setSelectedEpisode(bit.getEpisode());
                         disableSearchMode();
                         updateSubtitles(bit);
-                        
+
                     }
                 }
                 @Override                public void mousePressed(MouseEvent e) {                }
@@ -1364,6 +1366,9 @@ public class NoteFrame extends JFrame {
      *  ------------------------------------------------------------------*/
 
     public void addSeason() {
+        if (searchModeEnabled) {
+            disableSearchMode();
+        }
         JPanel inputs = new JPanel(new MigLayout());
         JTextField seasonName = new JTextField();
         JTextField episodeName = new JTextField();
@@ -1404,6 +1409,9 @@ public class NoteFrame extends JFrame {
 
 
     public void removeSeason() {
+        if (searchModeEnabled) {
+            disableSearchMode();
+        }
         if (note.getSeasons().isEmpty()) { return; }
 
         JComboBox<Season> seasonComboBox = new JComboBox<>();
@@ -1430,6 +1438,9 @@ public class NoteFrame extends JFrame {
 
 
     private void editSeason(Season s) {
+        if (searchModeEnabled) {
+            disableSearchMode();
+        }
         JPanel inputs = new JPanel(new MigLayout());
         JTextField seasonName = new JTextField(s.getName());
         JTextField episodeName = new JTextField();
@@ -1477,6 +1488,9 @@ public class NoteFrame extends JFrame {
 
 
     public void addEpisode() {
+        if (searchModeEnabled) {
+            disableSearchMode();
+        }
         if (note.getSeasons().isEmpty()) {
             noEpispdeWithoutSeason();
             return;
@@ -1509,6 +1523,9 @@ public class NoteFrame extends JFrame {
 
 
     public void removeEpisode() {
+        if (searchModeEnabled) {
+            disableSearchMode();
+        }
         if (note.getSeasons().isEmpty()) { return; }
         if (note.getSelectedEpisode() != null) {
             Episode e = note.getSelectedEpisode();
@@ -1552,6 +1569,9 @@ public class NoteFrame extends JFrame {
 
 
     private void editEpisode(Episode e) {
+        if (searchModeEnabled) {
+            disableSearchMode();
+        }
         JTextField episodeName = new JTextField(e.getName());
         JComboBox<Season> season = new JComboBox<>();
         note.getSeasons().forEach(season::addItem);
@@ -1622,6 +1642,9 @@ public class NoteFrame extends JFrame {
 
 
     public void openSubtitles() {
+        if (searchModeEnabled) {
+            disableSearchMode();
+        }
         int open = 0;
         if (note.getSelectedSeason() != null) {
             String warning = "Currently it is not possible to add Subtitles to a Season.";
@@ -1652,6 +1675,9 @@ public class NoteFrame extends JFrame {
 
 
     public void removeSubtitles() {
+        if (searchModeEnabled) {
+            disableSearchMode();
+        }
         if (note.getSelectedSeason() != null) {return;}
         if (note.getSelectedEpisode() != null) {
             if (note.getSelectedEpisode().getSubtitles().isEmpty()) {
