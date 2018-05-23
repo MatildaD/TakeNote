@@ -81,6 +81,7 @@ public class NoteFrame extends JFrame {
      * 	File Chooser
      *  ------------------------------------------------------------------*/
     private JFileChooser fc = new JFileChooser();
+    private JFileChooser subChooser = new JFileChooser();
 
 
     //SceneNotes
@@ -228,29 +229,78 @@ public class NoteFrame extends JFrame {
         searchField.getActionMap().put("focusSearchField", focusSearchField);
 
 
+        Action focusSubtitles = new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                subtitlePanel.requestFocus();
+            }
+        };
+        subtitlePanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK),
+                "focusSubtitles");
+        subtitlePanel.getActionMap().put("focusSubtitles", focusSubtitles);
+
+        Action quickSave = new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                save();
+            }
+        };
+        topPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK),
+                "quickSave");
+        topPanel.getActionMap().put("quickSave", quickSave);
+
     }
 
+    private void save() {
+        if (note.getLastSavedPath().equals("")) {
+            System.out.println("Save -> SaveAs (no last saved path)");
+            saveAs();
+            return;
+        }
+        saveNotes();
+
+        try (FileOutputStream fileOut = new FileOutputStream(note.getLastSavedPath())) {
+            System.out.println("Trying to open fileOut");
+            try (ObjectOutput out = new ObjectOutputStream(fileOut)) {
+                System.out.println("Writing out!");
+                out.writeObject(note);
+                out.close();
+                fileOut.close();
+                System.out.println("Finished writing out!");
+
+            }
+        } catch (IOException problem) {
+            problem.printStackTrace();
+        }
+
+    }
 
     private void createMenus() {
         final JMenu file = new JMenu("File");
         file.setMnemonic('F');
 
+        JMenuItem saveAs = new JMenuItem("Save As", 'A');
         JMenuItem save = new JMenuItem("Save", 'S');
         JMenuItem load = new JMenuItem("Load", 'L');
+
+
+        file.add(saveAs);
         file.add(save);
         file.add(load);
         final JMenuBar menuBar = new JMenuBar();
         menuBar.add(file);
         window.setJMenuBar(menuBar);
 
-        final ActionListener al = e -> {
+        final ActionListener al = (ActionEvent e) -> {
             if (e.getSource().equals(save)) {
                 save();
 
             } else if (e.getSource().equals(load)) {
                 load();
+
+            } else if (e.getSource().equals(saveAs)) {
+                saveAs();
             }
         };
+        saveAs.addActionListener(al);
         save.addActionListener(al);
         load.addActionListener(al);
 
@@ -258,19 +308,18 @@ public class NoteFrame extends JFrame {
         window.repaint();
     }
 
+
     /* -------------------------------------------------------------------
      * 	Save / Load
      *  ------------------------------------------------------------------*/
 
-    private void save() {
+    private void saveAs() {
         saveNotes();
         int answer = 0;
         if (!note.getLastSavedPath().equals("")) {
             fc.setSelectedFile(new File(note.getLastSavedPath()));
         }
         int returnVal = fc.showSaveDialog(NoteFrame.this);
-
-
 
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             File file = fc.getSelectedFile();
@@ -290,17 +339,9 @@ public class NoteFrame extends JFrame {
             }
 
             if (answer == 0) {
-                try (FileOutputStream fileOut = new FileOutputStream(file.getAbsolutePath())) {
-                    try (ObjectOutput out = new ObjectOutputStream(fileOut)) {
-                        out.writeObject(note);
-                        out.close();
-                        fileOut.close();
-
-                        note.setLastSavedPath(file.getAbsolutePath());
-                    }
-                } catch (IOException problem) {
-                    problem.printStackTrace();
-                }
+                note.setLastSavedPath(file.getAbsolutePath());
+                fc.setSelectedFile(new File(note.getLastSavedPath()));
+                save();
             }
         }
 
@@ -312,8 +353,11 @@ public class NoteFrame extends JFrame {
         String[] b = {"Yes", "No"};
         int answer = JOptionPane.showOptionDialog(NoteFrame.this, warning, "Save current first?", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, b, b[1]);
         if (answer == 0) {
-            save();
-
+            if (note.getLastSavedPath().equals("")) {
+                saveAs();
+            } else {
+                save();
+            }
         }
 
         int returnVal = fc.showOpenDialog(NoteFrame.this);
@@ -1492,7 +1536,7 @@ public class NoteFrame extends JFrame {
             disableSearchMode();
         }
         if (note.getSeasons().isEmpty()) {
-            noEpispdeWithoutSeason();
+            noEpisodeWithoutSeason();
             return;
         }
         JTextField episodeName = new JTextField();
@@ -1630,7 +1674,7 @@ public class NoteFrame extends JFrame {
         return inputs;
     }
 
-    private void noEpispdeWithoutSeason() {
+    private void noEpisodeWithoutSeason() {
         JOptionPane.showMessageDialog(window, "You need to create a Season first", "No Episode Without Season",
                 JOptionPane.INFORMATION_MESSAGE);
     }
@@ -1660,10 +1704,10 @@ public class NoteFrame extends JFrame {
 
             }
             if (open == 0) {
-                int returnVal = fc.showOpenDialog(NoteFrame.this);
+                int returnVal = subChooser.showOpenDialog(NoteFrame.this);
 
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    File file = fc.getSelectedFile();
+                    File file = subChooser.getSelectedFile();
                     note.getSelectedEpisode().importSubtitles(file.getAbsolutePath());
                     saveNotes();
                     updateSubtitles(null);
@@ -1736,6 +1780,12 @@ public class NoteFrame extends JFrame {
             s.setNote(a.getText());
         }
         activeNotesList.clear();
+        if (activeNote != null && activeNotes.containsKey(activeNote)) {
+            JPanel notePanel = activeNotes.get(activeNote);
+            JTextArea textArea = (JTextArea) notePanel.getComponent(3);
+            activeNote.setNote(textArea.getText());
+        }
+
     }
 
 
