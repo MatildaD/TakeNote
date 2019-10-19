@@ -63,6 +63,7 @@ public class NoteFrame extends JFrame {
     private JButton deselectAllTagsButton = new JButton("Deselect All Tags");
     private JButton notAllUnselectedTagsButton = new JButton("NOT All Unselected Tags");
     private JButton searchButton = new JButton("Search");
+    private JButton exitSearchButton = new JButton("Exit Search");
 
 
 
@@ -185,6 +186,7 @@ public class NoteFrame extends JFrame {
         topPanel.add(removeSubtitlesButton, "cell 2 1, grow");
 
 
+
         addSeasonButton.addActionListener(new ButtonListener(this));
         removeSeasonButton.addActionListener(new ButtonListener(this));
         addEpisodeButton.addActionListener(new ButtonListener(this));
@@ -193,6 +195,8 @@ public class NoteFrame extends JFrame {
         addSubtitlesButton.addActionListener(new ButtonListener(this));
         removeSubtitlesButton.addActionListener(new ButtonListener(this));
         searchButton.addActionListener(new ButtonListener(this));
+        exitSearchButton.addActionListener(new ButtonListener(this));
+
 
         deselectAllTagsButton.addActionListener(new ButtonListener(this));
         notAllUnselectedTagsButton.addActionListener(new ButtonListener(this));
@@ -258,13 +262,10 @@ public class NoteFrame extends JFrame {
         saveNotes();
 
         try (FileOutputStream fileOut = new FileOutputStream(note.getLastSavedPath())) {
-            System.out.println("Trying to open fileOut");
             try (ObjectOutput out = new ObjectOutputStream(fileOut)) {
-                System.out.println("Writing out!");
                 out.writeObject(note);
                 out.close();
                 fileOut.close();
-                System.out.println("Finished writing out!");
 
             }
         } catch (IOException problem) {
@@ -471,6 +472,7 @@ public class NoteFrame extends JFrame {
         textPrompt.changeStyle(Font.ITALIC);
         textPrompt.setShow(TextPrompt.Show.FOCUS_LOST);
 
+        //SEARCH SLOW: If search instantly is slow, try adding a min if 3 letters here
         searchField.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -492,6 +494,7 @@ public class NoteFrame extends JFrame {
 
         topPanel.add(searchField, "cell 4 1, width 150, height 27, split 2");
         topPanel.add(searchButton, "cell 5 1");
+        topPanel.add(exitSearchButton, "cell 6 1");
         topPanel.add(searchOnlySelected, "cell 4 0, grow");
         searchOnlySelected.setMnemonic(KeyEvent.VK_E);
 
@@ -557,7 +560,7 @@ public class NoteFrame extends JFrame {
     }
 
 
-    private void disableSearchMode() {
+    public void disableSearchMode() {
         searchModeEnabled = false;
         note.deselectAllTags();
         foundNotes = null;
@@ -567,6 +570,7 @@ public class NoteFrame extends JFrame {
         resetSearch();
         updateAll();
     }
+
 
 
 
@@ -1013,7 +1017,7 @@ public class NoteFrame extends JFrame {
         } else if (searchModeEnabled && (foundNotes == null || foundNotes.isEmpty())) {
             scenePanel.add(new JLabel("<html><h1> No results found </h1></html>"), "wrap");
         } else {
-            scenePanel.add(new JLabel("<html><h1> This should not be happening! </h1></html>"), "wrap");
+            //scenePanel.add(new JLabel("<html><h1> This should not be happening! </h1></html>"), "wrap");
             return;
         }
 
@@ -1126,8 +1130,8 @@ public class NoteFrame extends JFrame {
                         scene.addTag(tag);
                     }
                 }
-                updateTags();
                 updateLocalTagPanel(tagP, scene);
+                updateTags();
             });
 
             //Delete button SceneNote
@@ -1353,9 +1357,6 @@ public class NoteFrame extends JFrame {
         int centerY = notePanel.getBounds().y + (notePanel.getBounds().height/2 );
         int notePanelHeight = scenePanel.getHeight();
         int halfScrollPanelHeight = sceneNoteScroll.getHeight() / 2;
-
-        System.out.println("Y: " + notePanel.getBounds().y + " height/2: " + notePanel.getBounds().height/2 + " total CenterY: " + centerY);
-        System.out.println("Notepanel height " + scenePanel.getHeight() + "Half height " + sceneNoteScroll.getHeight() / 2);
 
         if (centerY < halfScrollPanelHeight) {
             yPos = 0;
@@ -1784,6 +1785,7 @@ public class NoteFrame extends JFrame {
             JPanel notePanel = activeNotes.get(activeNote);
             JTextArea textArea = (JTextArea) notePanel.getComponent(3);
             activeNote.setNote(textArea.getText());
+
         }
 
     }
@@ -1805,6 +1807,7 @@ public class NoteFrame extends JFrame {
     public JButton getAddSubtitlesButton() {return addSubtitlesButton;}
     public JButton getRemoveSubtitlesButton() {return removeSubtitlesButton;}
     public JButton getSearchButton() {return searchButton;}
+    public JButton getExitSearchButton() {return exitSearchButton;}
 
     public JButton getDeselectAllTagsButton() {return deselectAllTagsButton;}
     public JButton getNotAllUnselectedTagsButton() {return  notAllUnselectedTagsButton;}

@@ -164,8 +164,17 @@ public class Episode implements Serializable{
             try {
                 BufferedReader reader = new BufferedReader(new FileReader(filename));
                 String line;
+
+
+                Boolean first = true;
                 while ((line = reader.readLine()) != null) {
+                    System.out.println(line);
+                    if (first == true) {
+                        first = false;
+                        line = "1";
+                    }
                     if (isInteger(line)) {
+
                         int number = Integer.parseInt(line);
                         String time = reader.readLine();
                         String[] timeSplit = time.split(" --> ");

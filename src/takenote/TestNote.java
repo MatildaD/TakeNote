@@ -15,8 +15,8 @@ public class TestNote extends JFrame{
     public static void main(String[] args) {
         Note note = new Note("TestNote");
         NoteFrame noteFrame = new NoteFrame(note);
-
-        test(noteFrame);
+        noteFrame.updateAll();
+        //test(noteFrame);
 
 
     }

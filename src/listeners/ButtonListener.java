@@ -45,7 +45,11 @@ public class ButtonListener implements ActionListener {
             noteFrame.deselectAllTags();
         } else if (e.getSource().equals(noteFrame.getNotAllUnselectedTagsButton())) {
             noteFrame.notAllUnselectedTags();
+        } else if (e.getSource().equals(noteFrame.getExitSearchButton())) {
+            noteFrame.resetSearch();
+            noteFrame.disableSearchMode();
         }
+
 
 
 
